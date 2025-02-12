@@ -1,11 +1,11 @@
-const THEME_KEY = "theme"
+const THEME_KEY = "theme";
 
 function toggleDarkTheme() {
     setTheme(
         document.documentElement.getAttribute("data-bs-theme") === 'dark'
             ? "light"
             : "dark"
-    )
+    );
 }
 
 /**
@@ -67,5 +67,5 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-initTheme()
+initTheme();
 
