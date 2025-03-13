@@ -2,6 +2,7 @@
         lang="ts">
 
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
+import config from "@/assets/config.json"
 
 </script>
 
