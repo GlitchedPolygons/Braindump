@@ -40,7 +40,14 @@ export class AES
     {
         if (!this.ready)
         {
-            throw new Error('Not initialized... Call AES::init(aesKey) first!');
+            if (this.initializing)
+            {
+                await new Promise(f => setTimeout(f, 64));
+            }
+            else
+            {
+                throw new Error('Not initialized... Call AES::init(aesKey) first!');
+            }
         }
 
         const algorithm = {name: "AES-GCM", iv: window.crypto.getRandomValues(new Uint8Array(12))};
@@ -61,7 +68,14 @@ export class AES
     {
         if (!this.ready)
         {
-            throw new Error('Not initialized... Call AES::init(aesKey) first!');
+            if (this.initializing)
+            {
+                await new Promise(f => setTimeout(f, 64));
+            }
+            else
+            {
+                throw new Error('Not initialized... Call AES::init(aesKey) first!');
+            }
         }
 
         try
