@@ -82,10 +82,7 @@ export class AES
         {
             const ciphertextBytes = window.atob(ciphertext);
 
-            const algorithm = {
-                name: "AES-GCM",
-                iv: new Uint8Array(Array.from(ciphertextBytes.slice(0, 12)).map(ch => ch.charCodeAt(0)))
-            };
+            const algorithm = {name: "AES-GCM", iv: new Uint8Array(Array.from(ciphertextBytes.slice(0, 12)).map(ch => ch.charCodeAt(0)))};
 
             const key = await window.crypto.subtle.importKey('raw', this.aesKeyHash, algorithm, false, ['decrypt']);
 
