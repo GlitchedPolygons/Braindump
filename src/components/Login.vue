@@ -3,6 +3,13 @@
 
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json"
+import {AES} from "@/aes.ts";
+import {onMounted} from "vue";
+
+onMounted(async () =>
+{
+  // todo
+});
 
 </script>
 
