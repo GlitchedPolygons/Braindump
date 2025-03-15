@@ -3,13 +3,110 @@
 
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json"
-import {AES} from "@/aes.ts";
-import {onMounted} from "vue";
+import {onMounted, type Ref, ref} from "vue";
+import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+
+let loggingIn: Ref<boolean, boolean> = ref(false);
+
+let saveDefibrillatorToken: boolean = false;
+
+const username: Ref<string, string> = ref('');
+const password: Ref<string, string> = ref('');
+const totp: Ref<string, string> = ref('');
+
+const textEncoder: TextEncoder = new TextEncoder();
 
 onMounted(async () =>
 {
-  // todo
+  const lastUsername = localStorage.getItem(LocalStorageKeys.LAST_USERNAME);
+
+  if (lastUsername)
+  {
+    username.value = lastUsername;
+  }
 });
+
+function onChangeSaveDefibrillatorToken()
+{
+  localStorage.setItem(LocalStorageKeys.SAVE_DEFIBRILLATOR_TOKEN, saveDefibrillatorToken.toString());
+}
+
+async function login()
+{
+  if (loggingIn.value || !username.value || !password.value)
+  {
+    return;
+  }
+
+  loggingIn.value = true;
+
+  const passwordHash = arrayBufferToHexEncodedString(await window.crypto.subtle.digest('SHA-256', textEncoder.encode(password.value)));
+
+  const requestContext = {
+    method: 'POST',
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      Email: username.value,
+      PasswordHashSHA256: passwordHash,
+      Totp: totp.value && totp.value.length !== 0 ? totp.value : null,
+    })
+  };
+
+  fetch
+  (
+      `${config.BackendBaseURL}${EndpointURLs.LOGIN}`,
+      requestContext
+  ).then(response =>
+  {
+    response.json().then(responseBodyEnvelope =>
+    {
+      setTimeout(() => loggingIn.value = false, 1024);
+
+      if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)
+      {
+        const loginResponseDto = responseBodyEnvelope.Items[0];
+
+        const utcNow: number = Math.floor(Date.now() / 1000);
+
+        localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
+        localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
+        localStorage.setItem(LocalStorageKeys.LAST_USERNAME, username.value);
+        localStorage.setItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC, utcNow.toString());
+
+        if (saveDefibrillatorToken)
+        {
+          localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
+        }
+
+        window.location.reload();
+      }
+      else
+      {
+        onLoginFailed();
+      }
+    })
+  }).catch(error =>
+  {
+    onLoginFailed();
+    setTimeout(() => loggingIn.value = false, 1024);
+  });
+}
+
+function onLoginFailed(): void
+{
+  password.value = '';
+  totp.value = '';
+
+  new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
+}
+
+function arrayBufferToHexEncodedString(buffer: ArrayBuffer)
+{
+  return [...new Uint8Array(buffer)]
+      .map(x => x.toString(16).padStart(2, '0'))
+      .join('');
+}
+
 
 </script>
 
@@ -38,12 +135,15 @@ onMounted(async () =>
             Enter your credentials and start dumping.
           </p>
 
-          <form>
+          <div>
 
             <div class="form-group position-relative has-icon-left mb-4">
 
               <input type="text"
                      class="form-control form-control-xl"
+                     v-model="username"
+                     v-on:keyup.enter="login();"
+                     @focus="$event.target?.select();"
                      placeholder="Username">
 
               <div class="form-control-icon">
@@ -56,6 +156,9 @@ onMounted(async () =>
 
               <input type="password"
                      class="form-control form-control-xl"
+                     v-model="password"
+                     v-on:keyup.enter="login();"
+                     @focus="$event.target?.select();"
                      placeholder="Password">
 
               <div class="form-control-icon">
@@ -70,6 +173,9 @@ onMounted(async () =>
 
               <input type="text"
                      class="form-control form-control-xl"
+                     v-model="totp"
+                     v-on:keyup.enter="login();"
+                     @focus="$event.target?.select();"
                      placeholder="Two-Factor Authentication">
 
               <div class="form-control-icon">
@@ -82,7 +188,8 @@ onMounted(async () =>
 
               <input class="form-check-input me-2"
                      type="checkbox"
-                     value=""
+                     v-model="saveDefibrillatorToken"
+                     v-on:change="onChangeSaveDefibrillatorToken();"
                      id="checkbox-remember-me">
 
               <label class="form-check-label text-gray-600"
@@ -92,11 +199,58 @@ onMounted(async () =>
 
             </div>
 
-            <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5">
+            <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5"
+                    type="submit"
+                    :disabled="loggingIn || !username || !password"
+                    v-on:click="login();">
               Login
             </button>
 
-          </form>
+          </div>
+
+          <div class="toast"
+               id="toast-login-failed"
+               style="margin-top: 32px; width: 100%;"
+               data-bs-delay="8192"
+               data-bs-autohide="false"
+               role="alert"
+               aria-live="assertive"
+               aria-atomic="true">
+
+            <div class="toast-header">
+
+              <svg class="bd-placeholder-img rounded me-2"
+                   width="20"
+                   height="20"
+                   xmlns="http://www.w3.org/2000/svg"
+                   preserveAspectRatio="xMidYMid slice"
+                   aria-hidden="true"
+                   focusable="false">
+
+                <rect width="100%"
+                      height="100%"
+                      fill="#ff0000"></rect>
+              </svg>
+
+              <strong class="me-auto">
+                Error
+              </strong>
+
+              <small>
+                401
+              </small>
+
+              <button type="button"
+                      class="btn-close"
+                      style="filter: none;"
+                      data-bs-dismiss="toast"
+                      aria-label="Close"></button>
+            </div>
+
+            <div class="toast-body">
+              Login attempt failed. Please ensure that your credentials are correct or try again later!
+            </div>
+          </div>
 
           <div class="text-center mt-5 text-lg fs-4">
             <p class="text-gray-600">
