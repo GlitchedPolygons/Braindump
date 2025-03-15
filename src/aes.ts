@@ -1,92 +1,68 @@
 export class AES
 {
-    private ready: Boolean = false;
-    private initializing: Boolean = false;
     private textEncoder: TextEncoder = new TextEncoder();
     private textDecoder: TextDecoder = new TextDecoder();
-    private aesKeyHash: ArrayBuffer = new ArrayBuffer(0);
-
-    async init(aesKey: string)
-    {
-        if (this.ready || this.initializing)
-        {
-            return;
-        }
-
-        this.initializing = true;
-
-        this.aesKeyHash = await window.crypto.subtle.digest('SHA-256', this.textEncoder.encode(aesKey));
-
-        this.ready = true;
-
-        this.initializing = false;
-    }
-
-    reset(): void
-    {
-        this.aesKeyHash = new ArrayBuffer(0);
-
-        this.initializing = false;
-
-        this.ready = false;
-    }
 
     generateKey(): string
     {
         return window.btoa(String.fromCharCode(...new Uint8Array(window.crypto.getRandomValues(new Uint8Array(32)))));
     }
 
-    async encryptString(plaintext: string): Promise<string>
+    async deriveKey(encryptionKey: string, salt: Uint8Array)
     {
-        if (!this.ready)
-        {
-            if (this.initializing)
-            {
-                await new Promise(f => setTimeout(f, 64));
-            }
-            else
-            {
-                throw new Error('Not initialized... Call AES::init(aesKey) first!');
-            }
-        }
+        const pbkdf2 = {
+            name: 'PBKDF2',
+            hash: 'SHA-256',
+            salt: salt.buffer,
+            iterations: 1024 * 1024
+        };
+
+        return await window.crypto.subtle.deriveKey
+        (
+            pbkdf2,
+            await window.crypto.subtle.importKey
+            (
+                'raw',
+                await window.crypto.subtle.digest('SHA-256', this.textEncoder.encode(encryptionKey)),
+                {name: 'PBKDF2'},
+                false,
+                ['deriveKey']
+            ),
+            {name: 'AES-GCM', length: 256},
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    async encryptString(plaintext: string, encryptionKey: string): Promise<string>
+    {
+        const salt = window.crypto.getRandomValues(new Uint8Array(16));
+
+        const aesKey = await this.deriveKey(encryptionKey, salt);
 
         const algorithm = {name: "AES-GCM", iv: window.crypto.getRandomValues(new Uint8Array(12))};
-
-        const key = await window.crypto.subtle.importKey('raw', this.aesKeyHash, algorithm, false, ['encrypt']);
 
         const ciphertext = await window.crypto.subtle.encrypt
         (
             algorithm,
-            key,
+            aesKey,
             this.textEncoder.encode(plaintext),
         );
 
-        return window.btoa(`${String.fromCharCode(...new Uint8Array(algorithm.iv))}${String.fromCharCode(...new Uint8Array(ciphertext))}`);
+        return window.btoa(`${String.fromCharCode(...new Uint8Array(salt))}${String.fromCharCode(...new Uint8Array(algorithm.iv))}${String.fromCharCode(...new Uint8Array(ciphertext))}`);
     }
 
-    async decryptString(ciphertext: string): Promise<string>
+    async decryptString(ciphertext: string, decryptionKey: string): Promise<string>
     {
-        if (!this.ready)
-        {
-            if (this.initializing)
-            {
-                await new Promise(f => setTimeout(f, 64));
-            }
-            else
-            {
-                throw new Error('Not initialized... Call AES::init(aesKey) first!');
-            }
-        }
-
         try
         {
             const ciphertextBytes = window.atob(ciphertext);
 
-            const algorithm = {name: "AES-GCM", iv: new Uint8Array(Array.from(ciphertextBytes.slice(0, 12)).map(ch => ch.charCodeAt(0)))};
+            const aesKey = await this.deriveKey(decryptionKey, new Uint8Array(Array.from(ciphertextBytes.slice(0, 16)).map(ch => ch.charCodeAt(0))));
 
-            const key = await window.crypto.subtle.importKey('raw', this.aesKeyHash, algorithm, false, ['decrypt']);
+            const algorithm = {name: "AES-GCM", iv: new Uint8Array(Array.from(ciphertextBytes.slice(16, 28)).map(ch => ch.charCodeAt(0)))};
 
-            const decryptedBytes = await window.crypto.subtle.decrypt(algorithm, key, new Uint8Array(Array.from(ciphertextBytes.slice(12)).map(ch => ch.charCodeAt(0))));
+            const decryptedBytes = await window.crypto.subtle.decrypt(algorithm, aesKey, new Uint8Array(Array.from(ciphertextBytes.slice(28)).map(ch => ch.charCodeAt(0))));
 
             return this.textDecoder.decode(decryptedBytes);
         }
