@@ -7,6 +7,7 @@ import Braindump from "@/components/Braindump.vue";
 
 import {onMounted} from "vue";
 import {TypeNamesDTO, LocalStorageKeys, EndpointURLs} from "@/constants.ts";
+import {getUnixTimestamp} from "@/util.ts";
 
 let lastAuthTokenRefreshUTC: number = 0;
 
@@ -61,7 +62,7 @@ function refreshAuthToken()
     return;
   }
 
-  const utcNow: number = Math.floor(Date.now() / 1000);
+  const utcNow: number = getUnixTimestamp();
 
   if (utcNow - lastAuthTokenRefreshUTC < 512)
   {

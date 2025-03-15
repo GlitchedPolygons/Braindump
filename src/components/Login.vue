@@ -5,6 +5,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json"
 import {onMounted, type Ref, ref} from "vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {arrayBufferToHexEncodedString, getUnixTimestamp} from "@/util.ts";
 
 let loggingIn: Ref<boolean, boolean> = ref(false);
 
@@ -66,7 +67,7 @@ async function login()
       {
         const loginResponseDto = responseBodyEnvelope.Items[0];
 
-        const utcNow: number = Math.floor(Date.now() / 1000);
+        const utcNow: number = getUnixTimestamp();
 
         localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
         localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
@@ -99,14 +100,6 @@ function onLoginFailed(): void
 
   new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
 }
-
-function arrayBufferToHexEncodedString(buffer: ArrayBuffer)
-{
-  return [...new Uint8Array(buffer)]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('');
-}
-
 
 </script>
 
