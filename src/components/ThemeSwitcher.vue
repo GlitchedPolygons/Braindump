@@ -1,6 +1,50 @@
 <script setup
         lang="ts">
 
+import {onMounted, type Ref, ref} from "vue";
+import {LocalStorageKeys} from "@/constants.ts";
+
+let darkTheme: Ref<boolean, boolean> = ref(true);
+
+onMounted(() =>
+{
+  let storedThemePreference: string = localStorage.getItem(LocalStorageKeys.THEME) ?? '';
+
+  if (!storedThemePreference && window.matchMedia)
+  {
+    const mediaQuery: MediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
+
+    mediaQuery.addEventListener("change", (e) => setTheme(e.matches));
+
+    storedThemePreference = mediaQuery.matches ? 'dark' : 'light';
+  }
+
+  darkTheme.value = storedThemePreference === 'dark';
+
+  setTheme(darkTheme.value);
+});
+
+function onSwitchTheme()
+{
+  setTheme(darkTheme.value, true);
+}
+
+function setTheme(dark: boolean, persist: boolean = false)
+{
+  const theme: string =
+      dark
+          ? 'dark'
+          : 'light';
+
+  document.body.classList.add(theme);
+  document.documentElement.setAttribute('data-bs-theme', theme);
+
+  if (persist)
+  {
+    localStorage.setItem(LocalStorageKeys.THEME, theme);
+  }
+}
+
 </script>
 
 <template>
@@ -48,10 +92,12 @@
           </g>
         </svg>
         <div class="form-check form-switch fs-6">
-          <input class="form-check-input  me-0"
+          <input class="form-check-input me-0"
                  type="checkbox"
                  id="toggle-dark"
-                 style="cursor: pointer">
+                 v-model="darkTheme"
+                 @change="onSwitchTheme"
+                 style="cursor: pointer;">
           <label class="form-check-label"></label>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -87,4 +133,5 @@
 #theme-switcher-flex {
   gap: 16px;
 }
+
 </style>

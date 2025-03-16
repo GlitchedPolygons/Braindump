@@ -31,13 +31,38 @@ onMounted(() =>
 
   refreshAuthToken();
 
-  let theme = localStorage.getItem('theme') ?? 'dark';
-
-  if (theme)
-  {
-    document.documentElement.setAttribute('data-bs-theme', theme);
-  }
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js', 'vktDQfr/Ikhrtti/FA+u5LohNzPpFSlhp9Xj+rER/Vs=');
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/compiled/js/app.js', 'l8rWVyz/sArb+OzMOB2mU9LHrvbrOPCJEsnIyYbC8Gk=');
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/apexcharts/apexcharts.min.js', '+cagC7gYBHDzF6s5VmZnJFj3CZZYAb3ofFP6Qdv7k7E=');
 });
+
+function loadExternalScript(url: string, sha256sumBase64: string = '')
+{
+  const scriptElement: HTMLScriptElement = document.createElement("script");
+
+  scriptElement.setAttribute
+  (
+      "src",
+      url
+  );
+
+  if (sha256sumBase64)
+  {
+    scriptElement.setAttribute
+    (
+        "crossorigin",
+        ''
+    );
+
+    scriptElement.setAttribute
+    (
+        "integrity",
+        `sha256-${sha256sumBase64}`
+    );
+  }
+
+  document.head.appendChild(scriptElement);
+}
 
 document.onvisibilitychange = () =>
 {
