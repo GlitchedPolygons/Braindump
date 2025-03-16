@@ -62,7 +62,7 @@ function setTheme(dark: boolean, persist: boolean = false)
 
         <a href="javascript:window.location.reload();">
           <img :src="logoSrc"
-               alt="Logo"
+               alt=""
                srcset="">
         </a>
 
