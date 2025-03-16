@@ -252,6 +252,35 @@ function refresh()
 
         </ul>
 
+        <div class="footer clearfix mb-0 text-muted">
+          <hr />
+          <div style="margin-left: 16px;">
+            <p>
+              Copyright &copy; 2024-{{ year }}
+              <br />
+              <a href="https://glitchedpolygons.com"
+                 target="_blank">
+                Glitched Polygons GmbH
+              </a>
+            </p>
+          </div>
+          <hr />
+          <div style="margin-left: 16px;">
+            <p>
+              Created with <span class="text-danger"><i class="bi bi-heart-fill icon-mid"></i></span>
+              by
+              Raphael Beck
+              <br />
+              Source code available on
+              <a href="https://github.com/GlitchedPolygons/Braindump"
+                 target="_blank">
+                GitHub <span><i class="bi bi-github"></i></span>
+              </a>
+            </p>
+          </div>
+          <hr />
+        </div>
+
       </div>
 
     </div>
@@ -277,6 +306,7 @@ function refresh()
 
     </div>
 
+    <!--
     <footer>
       <div class="footer clearfix mb-0 text-muted">
         <div class="float-start">
@@ -304,6 +334,7 @@ function refresh()
         </div>
       </div>
     </footer>
+    -->
   </div>
 
 </template>

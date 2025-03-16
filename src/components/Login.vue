@@ -2,7 +2,7 @@
         lang="ts">
 
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
-import config from "@/assets/config.json"
+import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {arrayBufferToHexEncodedString, getUnixTimestamp} from "@/util.ts";
