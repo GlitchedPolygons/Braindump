@@ -1,7 +1,9 @@
 const THEME_KEY = "theme";
 
-function toggleDarkTheme() {
-    setTheme(
+function toggleDarkTheme()
+{
+    setTheme
+    (
         document.documentElement.getAttribute("data-bs-theme") === 'dark'
             ? "light"
             : "dark"
@@ -13,12 +15,13 @@ function toggleDarkTheme() {
  * @param {"dark"|"light"} theme
  * @param {boolean} persist
  */
-function setTheme(theme, persist = false) {
-
+function setTheme(theme, persist = false)
+{
     document.body.classList.add(theme);
     document.documentElement.setAttribute('data-bs-theme', theme);
 
-    if (persist) {
+    if (persist)
+    {
         localStorage.setItem(THEME_KEY, theme);
     }
 }
@@ -26,17 +29,19 @@ function setTheme(theme, persist = false) {
 /**
  * Init theme from setTheme()
  */
-function initTheme() {
-
+function initTheme()
+{
     // If the user manually set a theme, we'll load that.
     const storedTheme = localStorage.getItem(THEME_KEY);
 
-    if (storedTheme) {
+    if (storedTheme)
+    {
         return setTheme(storedTheme);
     }
 
     // Detect if the user set his preferred color scheme to dark.
-    if (!window.matchMedia) {
+    if (!window.matchMedia)
+    {
         return;
     }
 
@@ -52,20 +57,20 @@ function initTheme() {
     return setTheme(mediaQuery.matches ? "dark" : "light", true);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-
+window.addEventListener('DOMContentLoaded', () =>
+{
     const toggler = document.getElementById("toggle-dark");
     const theme = localStorage.getItem(THEME_KEY);
 
-    if (toggler) {
-
+    if (toggler)
+    {
         toggler.checked = theme === "dark";
 
-        toggler.addEventListener("input", (e) => {
+        toggler.addEventListener("input", (e) =>
+        {
             setTheme(e.target.checked ? "dark" : "light", true);
         });
     }
 });
 
 initTheme();
-

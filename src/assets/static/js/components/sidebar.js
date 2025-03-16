@@ -1,6 +1,3 @@
-import isDesktop from '../helper/isDesktop'
-
-
 /**
  * Calculate nested children height in sidebar menu
 * @param {HTMLElement} el 
@@ -118,7 +115,7 @@ class Sidebar {
    * On Sidebar Rezise Event
    */
   onResize() {
-    if (isDesktop(window)) {
+    if (window.innerWidth > 1280) {
       this.sidebarEL.classList.add("active")
       this.sidebarEL.classList.remove("inactive")
     } else {
@@ -166,7 +163,7 @@ class Sidebar {
    * Create Sidebar Backdrop
    */
   createBackdrop() {
-    if (isDesktop(window)) return
+    if (window.innerWidth > 1280) return
     this.deleteBackdrop()
     const backdrop = document.createElement("div")
     backdrop.classList.add("sidebar-backdrop")
@@ -188,7 +185,7 @@ class Sidebar {
    * Toggle Overflow Body
    */
   toggleOverflowBody(active) {
-    if (isDesktop(window)) return;
+    if (window.innerWidth > 1280) return;
     const sidebarState = this.sidebarEL.classList.contains("active")
     const body = document.querySelector("body")
     if (typeof active == "undefined") {
@@ -226,7 +223,7 @@ let sidebarEl = document.getElementById("sidebar")
    */
 const onFirstLoad = (sidebarEL) => {
   if (!sidebarEl) return
-  if (isDesktop(window)) {
+  if (window.innerWidth > 1280) {
     sidebarEL.classList.add("active")
     sidebarEL.classList.add('sidebar-desktop')
   }

@@ -120,7 +120,7 @@ var optionsEurope = {
     },
   },
 }
-
+/*
 let optionsAmerica = {
   ...optionsEurope,
   colors: ["#008b75"],
@@ -165,3 +165,4 @@ chartIndia.render()
 chartEurope.render()
 chartProfileVisit.render()
 chartVisitorsProfile.render()
+*/

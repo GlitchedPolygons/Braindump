@@ -59,6 +59,13 @@ async function login()
       requestContext
   ).then(response =>
   {
+    if (!response.ok)
+    {
+      onLoginFailed();
+      setTimeout(() => loggingIn.value = false, 1024);
+      return;
+    }
+
     response.json().then(responseBodyEnvelope =>
     {
       setTimeout(() => loggingIn.value = false, 1024);
