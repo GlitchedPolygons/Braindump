@@ -161,100 +161,139 @@ function aesFieldCheck(): boolean
 
         <div class="card">
 
-          <div class="card-header">
-            <strong>AES-256 GCM - Encrypt / Decrypt</strong>
-          </div>
+          <div class="accordion"
+               id="accordionAES">
 
-          <div class="form-group position-relative mb-3"
-               style="margin-right: 24px; margin-left: 24px;">
+            <div class="accordion-item">
 
-            <div class="input-group mb-3">
+              <h2 class="accordion-header"
+                  id="headingAccordionAES">
 
-              <button class="btn btn-primary"
-                      type="button"
-                      @click="onClickCopyKey"
-                      id="tools-aes-keygen">
+                <button class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAccordionAES"
+                        aria-expanded="true"
+                        aria-controls="collapseAccordionAES">
 
-                <i class="bi bi-copy"
-                   v-if="!copied"></i>
+                  <strong>
+                    AES-256 GCM - Encrypt / Decrypt
+                  </strong>
 
-                <i class="bi bi-check-circle"
-                   v-if="copied"></i>
+                </button>
 
-              </button>
+              </h2>
 
-              <input type="password"
-                     id="tools-aes-key"
-                     class="form-control"
-                     v-model="toolsAesKey"
-                     @focus="selectOnFocus"
-                     placeholder="Encryption key">
+              <div id="collapseAccordionAES"
+                   class="accordion-collapse collapse show"
+                   aria-labelledby="headingAccordionAES"
+                   data-bs-parent="#accordionAES">
 
-              <button class="btn btn-primary"
-                      type="button"
-                      @click="onClickGenerateKey"
-                      id="tools-aes-keygen">
-                Generate key
-              </button>
+                <div class="accordion-body">
 
-            </div>
+                  <br />
 
-          </div>
+                  <div class="form-group position-relative mb-3"
+                       style="margin-right: 24px; margin-left: 24px;">
 
-          <div class="card-body">
+                    <div class="input-group mb-3">
 
-            <div class="form-group with-title">
+                      <button class="btn btn-primary"
+                              type="button"
+                              @click="onClickCopyKey"
+                              id="tools-aes-keygen">
 
-              <textarea class="form-control"
-                        id="tools-aes-input"
-                        v-model="toolsAesInput"
-                        @input="onChangeInputAES"
-                        rows="8"></textarea>
+                        <i class="bi bi-copy"
+                           v-if="!copied"></i>
 
-              <label class="tools-aes-input-label unselectable">
-                Input
-              </label>
+                        <i class="bi bi-check-circle"
+                           v-if="copied"></i>
 
-            </div>
+                      </button>
 
-          </div>
+                      <input type="password"
+                             id="tools-aes-key"
+                             class="form-control"
+                             v-model="toolsAesKey"
+                             @focus="selectOnFocus"
+                             placeholder="Encryption key">
 
-          <div id="tools-aes-buttons">
+                      <button class="btn btn-primary"
+                              type="button"
+                              @click="onClickGenerateKey"
+                              id="tools-aes-keygen">
+                        Generate key
+                      </button>
 
-            <button class="btn btn-primary bdmp-button"
-                    type="button"
-                    @click="onClickEncrypt">
-              Encrypt
-            </button>
+                    </div>
 
-            <button class="btn btn-primary bdmp-button"
-                    type="button"
-                    @click="onClickDecrypt">
-              Decrypt
-            </button>
+                  </div>
 
-          </div>
+                  <div class="card-body">
 
-          <div class="card-body">
+                    <div class="form-group with-title">
 
-            <div class="form-group with-title mb-3">
+                    <textarea class="form-control"
+                              id="tools-aes-input"
+                              v-model="toolsAesInput"
+                              @input="onChangeInputAES"
+                              rows="8"></textarea>
 
-              <textarea class="form-control"
-                        id="tools-aes-output"
-                        v-model="toolsAesOutput"
-                        rows="8"></textarea>
+                      <label class="tools-aes-input-label unselectable">
+                        Input
+                      </label>
 
-              <label class="tools-aes-input-label unselectable">
-                Output
-              </label>
+                    </div>
+
+                  </div>
+
+                  <div id="tools-aes-buttons">
+
+                    <button class="btn btn-primary bdmp-button"
+                            type="button"
+                            @click="onClickEncrypt">
+                      Encrypt
+                    </button>
+
+                    <button class="btn btn-primary bdmp-button"
+                            type="button"
+                            @click="onClickDecrypt">
+                      Decrypt
+                    </button>
+
+                  </div>
+
+                  <div class="card-body">
+
+                    <div class="form-group with-title mb-3">
+
+                    <textarea class="form-control"
+                              id="tools-aes-output"
+                              v-model="toolsAesOutput"
+                              rows="8"></textarea>
+
+                      <label class="tools-aes-input-label unselectable">
+                        Output
+                      </label>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
 
             </div>
 
           </div>
 
         </div>
+
       </div>
+
     </div>
+
   </section>
 
 </template>
