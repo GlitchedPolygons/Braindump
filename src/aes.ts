@@ -1,11 +1,22 @@
+import {getUnixTimestamp} from "@/util.ts";
+import {LocalStorageKeys} from "@/constants.ts";
+
 export class AES
 {
     private textEncoder: TextEncoder = new TextEncoder();
     private textDecoder: TextDecoder = new TextDecoder();
 
-    generateKey(): string
+    async generateKey(): Promise<string>
     {
-        return window.btoa(String.fromCharCode(...new Uint8Array(window.crypto.getRandomValues(new Uint8Array(32)))));
+        let entropy: string = window.btoa(String.fromCharCode(...new Uint8Array(window.crypto.getRandomValues(new Uint8Array(64)))));
+
+        entropy += getUnixTimestamp().toString();
+        entropy += window.crypto.randomUUID().toString();
+        entropy += localStorage.getItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC);
+
+        const generatedAesKeyBytes: ArrayBuffer = await window.crypto.subtle.digest('SHA-256', this.textEncoder.encode(entropy));
+
+        return window.btoa(String.fromCharCode(...new Uint8Array(generatedAesKeyBytes)));
     }
 
     async deriveKey(encryptionKey: string, salt: Uint8Array)
