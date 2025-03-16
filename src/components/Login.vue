@@ -108,6 +108,12 @@ function onLoginFailed(): void
   new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
 }
 
+function selectOnFocus(event: Event): void
+{
+  const a = event.target as HTMLInputElement;
+  a?.select();
+}
+
 </script>
 
 <template>
@@ -143,7 +149,7 @@ function onLoginFailed(): void
                      class="form-control form-control-xl"
                      v-model="username"
                      v-on:keyup.enter="login();"
-                     @focus="$event.target?.select();"
+                     @focus="selectOnFocus"
                      placeholder="Username">
 
               <div class="form-control-icon">
@@ -158,7 +164,7 @@ function onLoginFailed(): void
                      class="form-control form-control-xl"
                      v-model="password"
                      v-on:keyup.enter="login();"
-                     @focus="$event.target?.select();"
+                     @focus="selectOnFocus"
                      placeholder="Password">
 
               <div class="form-control-icon">
@@ -175,7 +181,7 @@ function onLoginFailed(): void
                      class="form-control form-control-xl"
                      v-model="totp"
                      v-on:keyup.enter="login();"
-                     @focus="$event.target?.select();"
+                     @focus="selectOnFocus"
                      placeholder="Two-Factor Authentication">
 
               <div class="form-control-icon">
@@ -298,7 +304,7 @@ body {
 
 #auth #auth-right {
   height: 100%;
-  background: url(/src/assets/compiled/png/4853433.png), linear-gradient(69deg, #2d6e9d, #423f91)
+  background: url('https://mazer-template.pages.dev/demo/assets/compiled/png/4853433.png'), linear-gradient(69deg, #2d6e9d, #423f91)
 }
 
 #auth #auth-left {
@@ -343,7 +349,7 @@ body {
 }
 
 html[data-bs-theme=dark] #auth-right {
-  background: url(/src/assets/compiled/png/4853433.png), linear-gradient(90deg, #2d499d, #3f5491)
+  background: url('https://mazer-template.pages.dev/demo/assets/compiled/png/4853433.png'), linear-gradient(90deg, #2d499d, #3f5491)
 }
 
 

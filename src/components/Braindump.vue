@@ -2,8 +2,19 @@
         lang="ts">
 
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
+import {onMounted} from "vue";
 
 const year: number = new Date().getFullYear();
+
+onMounted(() =>
+{
+  refresh();
+});
+
+function refresh()
+{
+
+}
 
 </script>
 
