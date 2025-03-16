@@ -8,6 +8,7 @@ import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constan
 import {logout} from "@/util.ts";
 import {AES} from "@/aes.ts";
 import type {Braindump} from "@/braindump.ts";
+import Account from "@/components/Account.vue";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -199,8 +200,10 @@ function refresh()
           <li class="sidebar-item active">
             <a href="javascript:void(0);"
                class='sidebar-link'>
-              <i class="bi bi-grid-fill"></i>
-              <span>Dashboard</span>
+              <i class="bi bi-person-circle"></i>
+              <span>
+                Account
+              </span>
             </a>
           </li>
 
@@ -209,7 +212,9 @@ function refresh()
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-lock-fill"></i>
-              <span>Logout</span>
+              <span>
+                Logout
+              </span>
             </a>
           </li>
 
@@ -235,10 +240,21 @@ function refresh()
           </li>
           -->
 
+          <li style="list-style-type: none;">
+            <hr />
+          </li>
 
-          <li class="sidebar-title"
-              v-if="dumps.length > 0">
+          <li class="sidebar-title">
             Dumps
+          </li>
+
+          <li class="sidebar-item">
+
+            <button class="btn btn-success"
+                    style="width: 100%; font-weight: bold;">
+              + Create new dump
+            </button>
+
           </li>
 
           <li class="sidebar-item"
@@ -252,7 +268,7 @@ function refresh()
 
         </ul>
 
-        <div class="footer clearfix mb-0 text-muted">
+        <div class="footer clearfix mt-5 mb-0 text-muted">
           <hr />
           <div style="margin-left: 16px;">
             <p>
@@ -297,12 +313,18 @@ function refresh()
     </header>
 
     <div class="page-heading">
+
+      <!--
       <h3>
         Braindump
       </h3>
+      -->
+
     </div>
 
     <div class="page-content">
+
+      <Account />
 
     </div>
 

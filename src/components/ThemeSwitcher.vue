@@ -55,6 +55,8 @@ function setTheme(dark: boolean, persist: boolean = false)
 
   <div class="sidebar-header position-relative">
 
+    Braindump
+
     <div id="theme-switcher-flex"
          class="d-flex justify-content-between align-items-center">
 
