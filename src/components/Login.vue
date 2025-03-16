@@ -7,6 +7,8 @@ import {onMounted, type Ref, ref} from "vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {arrayBufferToHexEncodedString, getUnixTimestamp} from "@/util.ts";
 
+declare var bootstrap: any;
+
 let loggingIn: Ref<boolean, boolean> = ref(false);
 
 let saveDefibrillatorToken: boolean = false;

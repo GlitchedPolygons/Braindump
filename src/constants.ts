@@ -25,19 +25,22 @@ export const EndpointURLs = Object.freeze
         CHANGE_PASSWORD: '/api/v1/auth/change-password',
         CHANGE_EMAIL: '/api/v1/auth/change-email',
         CHANGE_EMAIL_CONFIRM: '/api/v1/auth/change-email/confirm',
+        DATA_ENTRIES: '/api/v1/data',
+        CHECK_NAME_AVAILABILITY: '/api/v1/data/name/check-availability',
     }
 );
 
 export const TypeNamesDTO = Object.freeze
 (
     {
-        LOGIN_RESPONSE_DTO: 'LoginResponseDto'
+        LOGIN_RESPONSE_DTO: 'LoginResponseDto',
+        USER_DATA_REDUX_RESPONSE_DTO: 'UserDataReduxResponseDto',
     }
 );
 
 export const Constants = Object.freeze
 (
     {
-        //
+        BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME: 'BRAINDUMP_ENCRYPTED_AES_KEY'
     }
 );
