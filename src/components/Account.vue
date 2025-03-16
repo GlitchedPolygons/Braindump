@@ -16,8 +16,7 @@ function onClickDeleteAccount(): void
 
   <div class="page-title">
 
-    <div class="row"
-         style="justify-content: center;">
+    <div class="row">
 
       <div class="col-lg-8 order-md-1 order-last">
 
@@ -248,5 +247,9 @@ function onClickDeleteAccount(): void
 </template>
 
 <style scoped>
+
+.row {
+  justify-content: center;
+}
 
 </style>

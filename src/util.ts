@@ -21,3 +21,9 @@ export function logout(): void
 
     window.location.reload();
 }
+
+export function selectOnFocus(event: Event): void
+{
+    const a = event.target as HTMLInputElement;
+    a?.select();
+}

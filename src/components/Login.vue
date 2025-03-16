@@ -5,7 +5,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, getUnixTimestamp} from "@/util.ts";
+import {arrayBufferToHexEncodedString, getUnixTimestamp, selectOnFocus} from "@/util.ts";
 
 declare var bootstrap: any;
 
@@ -112,12 +112,6 @@ function onLoginFailed(): void
   totp.value = '';
 
   new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
-}
-
-function selectOnFocus(event: Event): void
-{
-  const a = event.target as HTMLInputElement;
-  a?.select();
 }
 
 </script>

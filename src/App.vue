@@ -7,7 +7,7 @@ import Braindump from "@/components/Braindump.vue";
 
 import {onMounted} from "vue";
 import {TypeNamesDTO, LocalStorageKeys, EndpointURLs} from "@/constants.ts";
-import {getUnixTimestamp} from "@/util.ts";
+import {getUnixTimestamp, logout} from "@/util.ts";
 
 let lastAuthTokenRefreshUTC: number = 0;
 
@@ -120,6 +120,11 @@ function refreshAuthToken()
   (
       response =>
       {
+        if (!response.ok)
+        {
+          logout();
+        }
+
         response.json().then((responseBodyEnvelope) =>
         {
           if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)

@@ -79,7 +79,7 @@ export class AES
         }
         catch (e)
         {
-            throw new Error('Decryption failed!');
+            return '';
         }
     }
 }

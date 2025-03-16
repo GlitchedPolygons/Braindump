@@ -9,6 +9,7 @@ import {logout} from "@/util.ts";
 import {AES} from "@/aes.ts";
 import type {Braindump} from "@/braindump.ts";
 import Account from "@/components/Account.vue";
+import Tools from "@/components/Tools.vue";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -207,6 +208,16 @@ function refresh()
             </a>
           </li>
 
+          <li class="sidebar-item">
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-wrench-adjustable"></i>
+              <span>
+                Tools
+              </span>
+            </a>
+          </li>
+
           <li class="sidebar-item"
               @click="logout();">
             <a href="javascript:void(0);"
@@ -324,7 +335,9 @@ function refresh()
 
     <div class="page-content">
 
-      <Account />
+<!--      <Account />-->
+
+      <Tools />
 
     </div>
 
