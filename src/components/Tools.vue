@@ -202,6 +202,7 @@ function aesFieldCheck(): boolean
 
                       <button class="btn btn-primary"
                               type="button"
+                              :disabled="!toolsAesKey"
                               @click="onClickCopyKey"
                               id="tools-aes-keygen">
 
