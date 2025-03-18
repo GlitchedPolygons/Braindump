@@ -4,7 +4,7 @@
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
-import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {getUnixTimestamp, selectOnFocus, sha256} from "@/util.ts";
 
 declare var bootstrap: any;
@@ -133,11 +133,11 @@ function onLoginFailed(): void
 
           </div>
 
-          <h1 class="auth-title">
+          <h1 class="auth-title unselectable">
             Login
           </h1>
 
-          <p class="auth-subtitle mb-5">
+          <p class="auth-subtitle mb-5 unselectable">
             Enter your credentials and start dumping.
           </p>
 
@@ -198,7 +198,7 @@ function onLoginFailed(): void
                      v-on:change="onChangeSaveDefibrillatorToken();"
                      id="checkbox-remember-me">
 
-              <label class="form-check-label text-gray-600"
+              <label class="form-check-label text-gray-600 unselectable"
                      for="checkbox-remember-me">
                 Keep me logged in
               </label>
@@ -209,7 +209,7 @@ function onLoginFailed(): void
                     type="submit"
                     :disabled="loggingIn || !username || !password"
                     v-on:click="login();">
-              Login
+              {{ loggingIn ? 'Logging in...' : 'Login' }}
             </button>
 
           </div>
@@ -259,20 +259,23 @@ function onLoginFailed(): void
           </div>
 
           <div class="text-center mt-5 text-lg fs-4">
-            <p class="text-gray-600">
+
+            <p class="text-gray-600 unselectable">
               Don't have an account?
-              <a href="auth-register.html"
-                 class="font-bold">
+              <a :href="Constants.SIGN_UP_URL"
+                 class="font-bold signup-link">
                 Sign up
               </a>
             </p>
 
-            <p>
-              <a class="font-bold"
-                 href="auth-forgot-password.html">
-                Forgot password?
-              </a>
-            </p>
+<!--            -->
+<!--            <p>-->
+<!--              <a class="font-bold"-->
+<!--                 href="auth-forgot-password.html">-->
+<!--                Forgot password?-->
+<!--              </a>-->
+<!--            </p>-->
+<!--            -->
 
           </div>
 
@@ -352,5 +355,9 @@ html[data-bs-theme=dark] #auth-right {
   background: url('https://mazer-template.pages.dev/demo/assets/compiled/png/4853433.png'), linear-gradient(90deg, #2d499d, #3f5491)
 }
 
+.signup-link {
+  word-break: keep-all;
+  white-space: preserve nowrap;
+}
 
 </style>

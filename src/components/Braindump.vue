@@ -196,7 +196,7 @@ function onSelectedMenuItem(itemIndex: number)
       <div class="sidebar-header position-relative">
         <div class="d-flex justify-content-between align-items-center">
 
-          <ThemeSwitcher />
+          <ThemeSwitcher :include-title-label="true" />
 
           <div class="sidebar-toggler x">
             <a href="javascript:void(0);"
@@ -209,7 +209,7 @@ function onSelectedMenuItem(itemIndex: number)
 
         <ul class="menu">
 
-          <li class="sidebar-title">
+          <li class="sidebar-title unselectable">
             Menu
           </li>
 
@@ -272,7 +272,7 @@ function onSelectedMenuItem(itemIndex: number)
             <hr />
           </li>
 
-          <li class="sidebar-title">
+          <li class="sidebar-title unselectable">
             Dumps
           </li>
 

@@ -8,6 +8,8 @@ import {clearTimeout} from "node:timers";
 
 const aes: AES = new AES();
 
+const maxTextFieldLength: number = 1024 * 64;
+
 let copyAnim: number;
 let copied = ref(false);
 let toolsAesKey = ref('');
@@ -235,6 +237,7 @@ function aesFieldCheck(): boolean
 
                     <textarea class="form-control"
                               id="tools-aes-input"
+                              :maxlength="maxTextFieldLength"
                               v-model="toolsAesInput"
                               @input="onChangeInputAES"
                               rows="8"></textarea>
@@ -251,12 +254,14 @@ function aesFieldCheck(): boolean
 
                     <button class="btn btn-primary bdmp-button"
                             type="button"
+                            :disabled="!toolsAesKey || !toolsAesInput"
                             @click="onClickEncrypt">
                       Encrypt
                     </button>
 
                     <button class="btn btn-primary bdmp-button"
                             type="button"
+                            :disabled="!toolsAesKey || !toolsAesInput"
                             @click="onClickDecrypt">
                       Decrypt
                     </button>
