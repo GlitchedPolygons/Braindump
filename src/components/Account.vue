@@ -5,7 +5,8 @@ import {onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 import {isPasswordShitty, logout, sha256} from "@/util.ts";
-import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import QRCodeVue3 from "qrcode-vue3";
 
 let busy = ref(false);
 let enablingTotp = ref(false);
@@ -20,6 +21,8 @@ let oldPassword = ref('');
 let newPassword = ref('');
 let newPassword2 = ref('');
 let enableTotpCode = ref('');
+let totpSecret = ref('');
+let totpSecretQR = ref('');
 
 const aes = new AES();
 
@@ -46,7 +49,7 @@ onMounted(async () =>
 
   const responseBody = await response.json();
 
-  if (!responseBody || responseBody.Type !== 'UserResponseDto' || responseBody.Items.length === 0)
+  if (!responseBody || responseBody.Type !== TypeNamesDTO.USER_RESPONSE_DTO || responseBody.Items.length === 0)
   {
     logout();
   }
@@ -303,7 +306,25 @@ async function onClickEnable2FA(): Promise<void>
         requestContext
     );
 
-    // todo
+    if (!response.ok)
+    {
+      alert(`Two-factor authentication activation request rejected. Error ${response.status} (${response.statusText})`);
+      busy.value = false;
+      return;
+    }
+
+    const responseBodyEnvelope = await response.json();
+
+    if (!responseBodyEnvelope || responseBodyEnvelope.Type !== TypeNamesDTO.USER_ENABLE_2FA_RESPONSE_DTO || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length === 0)
+    {
+      alert(`Two-factor authentication activation request rejected. Error ${response.status} (${response.statusText}).`);
+      busy.value = false;
+      return;
+    }
+
+    enablingTotp.value = true;
+    totpSecret.value = responseBodyEnvelope.Items[0].TotpSecret;
+    totpSecretQR.value = `otpauth://totp/Braindump?secret=${totpSecret.value}`;
   }
   else
   {
@@ -324,7 +345,16 @@ async function onClickEnable2FA(): Promise<void>
         requestContext
     );
 
-    // todo
+    if (!response.ok)
+    {
+      alert(`Two-factor authentication activation failed. Please double-check your input and try again.`);
+      busy.value = false;
+      return;
+    }
+
+    totpSecret.value = '';
+    totpSecretQR.value = '';
+    enablingTotp.value = false;
   }
 }
 
@@ -598,6 +628,9 @@ function onClickDeleteAccount(): void
               To find out more about what 2FA is, check out its
               <a href="https://en.wikipedia.org/wiki/Multi-factor_authentication"
                  target="_blank">Wikipedia article</a>.
+
+              <QRCodeVue3 value="Simple QR code" />
+
             </p>
 
             <div v-if="enablingTotp">
