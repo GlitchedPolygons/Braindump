@@ -212,7 +212,7 @@ async function onClickChangeEmail(): Promise<void>
           busy.value = false;
           return;
         case 409:
-          alert(`Email address modification request rejected because the email address ${newEmail.value} is already in use!`);
+          alert(`Email address modification request rejected because the email address "${newEmail.value}" is already in use!`);
           newEmail.value = '';
           newEmail2.value = '';
           busy.value = false;
