@@ -3,11 +3,12 @@
 
 import {onMounted, ref} from "vue";
 import config from "@/assets/config.json";
-import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, isPasswordShitty, logout, sha256} from "@/util.ts";
 import {AES, aesKeyStore} from "@/aes.ts";
+import {isPasswordShitty, logout, sha256} from "@/util.ts";
+import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
 
 let busy = ref(false);
+let enablingTotp = ref(false);
 let changingEmail = ref(false);
 let confirmDeletion = ref(false);
 
@@ -18,11 +19,9 @@ let newEmailTotp = ref('');
 let oldPassword = ref('');
 let newPassword = ref('');
 let newPassword2 = ref('');
-let disableTOTP = ref('');
+let enableTotpCode = ref('');
 
 const aes = new AES();
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
 onMounted(async () =>
 {
@@ -279,7 +278,7 @@ async function onClickChangeEmail(): Promise<void>
   }
 }
 
-function onClickEnable2FA()
+async function onClickEnable2FA(): Promise<void>
 {
   if (busy.value === true)
   {
@@ -288,7 +287,45 @@ function onClickEnable2FA()
 
   busy.value = true;
 
-  // todo
+  if (enablingTotp.value === false)
+  {
+    const requestContext = {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+      }
+    };
+
+    const response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.ENABLE_2FA}`,
+        requestContext
+    );
+
+    // todo
+  }
+  else
+  {
+    const requestContext = {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+      },
+      body: JSON.stringify({
+        Totp: enableTotpCode.value.replace(/ /g, '')
+      })
+    };
+
+    const response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.ENABLE_2FA_CONFIRM}`,
+        requestContext
+    );
+
+    // todo
+  }
 }
 
 function onClickDisable2FA()
@@ -563,6 +600,12 @@ function onClickDeleteAccount(): void
                  target="_blank">Wikipedia article</a>.
             </p>
 
+            <div v-if="enablingTotp">
+
+              <!-- TODO: show 2FA secret here with QR code and all that -->
+
+            </div>
+
             <div style="margin-top: 32px;"></div>
 
             <div class="form-group my-2 d-flex justify-content-end">
@@ -580,6 +623,8 @@ function onClickDeleteAccount(): void
 
           <div class="card-body"
                v-else>
+
+            <!-- TODO: show input field for last TOTP code + disable button here (show a confirmation dialog first before definitively disabling 2FA) -->
 
           </div>
 
@@ -601,45 +646,41 @@ function onClickDeleteAccount(): void
 
           <div class="card-body">
 
-            <form action="#"
-                  method="get">
+            <p>
+              Your account will be permanently deleted and cannot be restored. Tick the checkbox below to proceed...
+            </p>
 
-              <p>
-                Your account will be permanently deleted and cannot be restored. Tick the checkbox below to proceed...
-              </p>
+            <div class="form-check">
 
-              <div class="form-check">
+              <div class="checkbox">
 
-                <div class="checkbox">
+                <input type="checkbox"
+                       id="checkbox-confirm-account-deletion"
+                       v-model="confirmDeletion"
+                       class="form-check-input">
 
-                  <input type="checkbox"
-                         id="checkbox-confirm-account-deletion"
-                         v-model="confirmDeletion"
-                         class="form-check-input">
-
-                  <label for="checkbox-confirm-account-deletion"
-                         unselectable="on"
-                         class="unselectable">
-                    Confirm permanent deletion
-                  </label>
-                </div>
+                <label for="checkbox-confirm-account-deletion"
+                       unselectable="on"
+                       class="unselectable">
+                  Confirm permanent deletion
+                </label>
               </div>
+            </div>
 
-              <div style="margin-top: 32px;"></div>
+            <div style="margin-top: 32px;"></div>
 
-              <div class="form-group my-2 d-flex justify-content-end">
+            <div class="form-group my-2 d-flex justify-content-end">
 
-                <button type="submit"
-                        class="btn btn-danger bdmp-button"
-                        id="btn-delete-account"
-                        @click="onClickDeleteAccount"
-                        :disabled="busy || !confirmDeletion">
-                  Delete
-                </button>
+              <button type="submit"
+                      class="btn btn-danger bdmp-button"
+                      id="btn-delete-account"
+                      @click="onClickDeleteAccount"
+                      :disabled="busy || !confirmDeletion">
+                Delete
+              </button>
 
-              </div>
+            </div>
 
-            </form>
           </div>
         </div>
       </div>
