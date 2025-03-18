@@ -4,7 +4,6 @@
 import {selectOnFocus} from "@/util.ts";
 import {ref} from "vue";
 import {AES, aesKeyStore} from "@/aes.ts";
-import {clearTimeout} from "node:timers";
 
 const aes: AES = new AES();
 

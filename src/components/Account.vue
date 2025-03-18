@@ -4,14 +4,16 @@
 import {onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
-import {isPasswordShitty, logout, sha256} from "@/util.ts";
+import {isPasswordShitty, logout, selectOnFocus, sha256} from "@/util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import QRCodeVue3 from "qrcode-vue3";
+import QrcodeVue, {type ImageSettings} from "qrcode.vue";
 
 let busy = ref(false);
 let enablingTotp = ref(false);
+let disablingTotp = ref(false);
 let changingEmail = ref(false);
 let confirmDeletion = ref(false);
+let copiedTotpSecret = ref(false);
 
 let user = ref();
 let newEmail = ref('');
@@ -21,12 +23,20 @@ let oldPassword = ref('');
 let newPassword = ref('');
 let newPassword2 = ref('');
 let enableTotpCode = ref('');
+let disableTotpCode = ref('');
 let totpSecret = ref('');
 let totpSecretQR = ref('');
+
+let copyAnim: number;
 
 const aes = new AES();
 
 onMounted(async () =>
+{
+  await refreshUserAccount();
+});
+
+async function refreshUserAccount(): Promise<void>
 {
   const requestContext = {
     method: 'GET',
@@ -55,7 +65,7 @@ onMounted(async () =>
   }
 
   user.value = responseBody.Items[0];
-});
+}
 
 async function onClickChangePassword(): Promise<void>
 {
@@ -322,6 +332,7 @@ async function onClickEnable2FA(): Promise<void>
       return;
     }
 
+    busy.value = false;
     enablingTotp.value = true;
     totpSecret.value = responseBodyEnvelope.Items[0].TotpSecret;
     totpSecretQR.value = `otpauth://totp/Braindump?secret=${totpSecret.value}`;
@@ -352,20 +363,52 @@ async function onClickEnable2FA(): Promise<void>
       return;
     }
 
+    busy.value = false;
     totpSecret.value = '';
     totpSecretQR.value = '';
     enablingTotp.value = false;
+    await refreshUserAccount();
   }
 }
 
 function onClickDisable2FA()
 {
+  if (disablingTotp.value === false)
+  {
+    disablingTotp.value = true;
+    return;
+  }
+
   if (!confirm('Are you sure?\n\nTwo-Factor Authentication adds a considerable amount of security to your account.\n\nDisabling 2FA will decrease your account\'s security!'))
   {
     return;
   }
 
   // todo
+}
+
+function onClickCopyTotpSecret(): void
+{
+  if (!totpSecret.value)
+  {
+    return;
+  }
+
+  navigator.clipboard.writeText(totpSecret.value);
+
+  copiedTotpSecret.value = true;
+
+  if (copyAnim)
+  {
+    window.clearTimeout(copyAnim);
+  }
+
+  copyAnim = window.setInterval(() =>
+  {
+    copiedTotpSecret.value = false;
+  }, 2048);
+
+  setTimeout(() => alert('2FA secret has been copied to clipboard.\n\nCAREFUL! Do not send this to anyone.\n\nBack it up somewhere safe (maybe in a password manager like Bitwarden?)'), 64);
 }
 
 function onClickDeleteAccount(): void
@@ -619,7 +662,7 @@ function onClickDeleteAccount(): void
           <div class="card-body"
                v-if="user?.TotpEnabled === false">
 
-            <p>
+            <p v-if="!enablingTotp">
               Great idea!
               <br />
               <br />
@@ -627,25 +670,101 @@ function onClickDeleteAccount(): void
               <br />
               To find out more about what 2FA is, check out its
               <a href="https://en.wikipedia.org/wiki/Multi-factor_authentication"
-                 target="_blank">Wikipedia article</a>.
-
-              <QRCodeVue3 value="Simple QR code" />
-
+                 target="_blank">
+                Wikipedia article
+              </a>.
             </p>
 
-            <div v-if="enablingTotp">
+            <div v-else>
 
-              <!-- TODO: show 2FA secret here with QR code and all that -->
+              <p>
+                The following is your 2FA secret. <strong>It will never be displayed again.</strong> Please store it
+                somewhere safe!
+                If you lose it and your 2FA-device, you lose access to your user account!
+              </p>
+
+              <p>
+                Manually enter your 2FA secret into a multi-factor auth app of your choice
+                (e.g.
+                <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
+                   target="_blank">
+                  Google Authenticator
+                </a>
+                or the free, open-source
+                <a href="https://tfacgui.glitchedpolygons.com/"
+                   target="_blank">
+                  TFACGUI</a>),
+                or scan the following QR-code with it.
+              </p>
+
+              <div class="totp-secret">
+
+                <div class="input-group mb-3 mt-3"
+                     style="max-width: 512px">
+
+                  <button class="btn btn-primary"
+                          type="button"
+                          :disabled="!totpSecret"
+                          @click="onClickCopyTotpSecret">
+
+                    <i class="bi bi-copy"
+                       v-if="!copiedTotpSecret"></i>
+
+                    <i class="bi bi-check-circle"
+                       v-if="copiedTotpSecret"></i>
+
+                  </button>
+
+                  <input type="text"
+                         maxlength="8"
+                         id="totp-secret"
+                         name="totp-secret"
+                         class="form-control"
+                         style="cursor: default;"
+                         :value="totpSecret"
+                         @focus="selectOnFocus"
+                         readonly>
+
+                </div>
+
+              </div>
+
+              <div class="totp-secret-qr">
+
+                <qrcode-vue
+                    :value="totpSecretQR"
+                    style="border-radius: 4px"
+                    :margin="2"
+                    :size="280"
+                    :render-as="'svg'"
+                    :level="'M'" />
+
+              </div>
+
+              <div style="margin-top: 32px;"></div>
+
+              <div class="form-group my-2 d-flex justify-content-center">
+
+                <input type="text"
+                       name="totp-enable-code"
+                       maxlength="8"
+                       style="max-width: 285px;"
+                       class="form-control"
+                       v-model="enableTotpCode"
+                       :readonly="busy"
+                       placeholder="Enter a valid TOTP">
+              </div>
 
             </div>
 
             <div style="margin-top: 32px;"></div>
 
-            <div class="form-group my-2 d-flex justify-content-end">
+            <div :class="`form-group my-2 d-flex ${enablingTotp ? 'justify-content-center' : 'justify-content-end'}`">
 
               <button type="submit"
                       :disabled="busy"
                       @click="onClickEnable2FA"
+                      style="max-width: 285px;"
                       class="btn btn-success bdmp-button">
                 Enable two-factor authentication
               </button>
@@ -656,6 +775,43 @@ function onClickDeleteAccount(): void
 
           <div class="card-body"
                v-else>
+
+            <div v-if="!disablingTotp">
+              <p>
+                Are you sure you want to disable two factor authentication?
+              </p>
+
+            </div>
+
+            <div v-else>
+
+              <div class="form-group my-2 d-flex justify-content-center">
+
+                <input type="text"
+                       name="totp-enable-code"
+                       maxlength="8"
+                       style="max-width: 300px;"
+                       class="form-control"
+                       v-model="disableTotpCode"
+                       :readonly="busy"
+                       placeholder="Enter a valid TOTP">
+              </div>
+
+            </div>
+
+            <div style="margin-top: 32px;"></div>
+
+            <div :class="`form-group my-2 d-flex ${disablingTotp ? 'justify-content-center' : 'justify-content-end'}`">
+
+              <button type="submit"
+                      :disabled="busy"
+                      @click="onClickDisable2FA"
+                      style="max-width: 300px;"
+                      class="btn btn-danger bdmp-button">
+                Disable two-factor authentication
+              </button>
+
+            </div>
 
             <!-- TODO: show input field for last TOTP code + disable button here (show a confirmation dialog first before definitively disabling 2FA) -->
 
@@ -732,6 +888,20 @@ function onClickDeleteAccount(): void
   button {
     width: 100%;
   }
+}
+
+.totp-secret {
+  margin-right: 24px;
+  margin-left: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.totp-secret-qr {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+  margin-bottom: 32px;
 }
 
 </style>
