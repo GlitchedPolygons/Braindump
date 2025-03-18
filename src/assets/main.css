@@ -15,6 +15,7 @@
 }
 
 input[readonly] {
+    cursor: not-allowed;
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     -khtml-user-select: none !important;

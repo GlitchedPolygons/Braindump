@@ -7,14 +7,18 @@ import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
 import {arrayBufferToHexEncodedString, isPasswordShitty, logout, sha256} from "@/util.ts";
 import {AES, aesKeyStore} from "@/aes.ts";
 
+let busy = ref(false);
+let changingEmail = ref(false);
 let confirmDeletion = ref(false);
+
 let user = ref();
 let newEmail = ref('');
 let newEmail2 = ref('');
+let newEmailTotp = ref('');
 let oldPassword = ref('');
 let newPassword = ref('');
 let newPassword2 = ref('');
-let busy = ref(false);
+let disableTOTP = ref('');
 
 const aes = new AES();
 const textEncoder = new TextEncoder();
@@ -155,25 +159,157 @@ async function onClickChangePassword(): Promise<void>
   }
 }
 
-function onClickChangeEmail(): void
+async function onClickChangeEmail(): Promise<void>
 {
-  if (!newEmail.value)
+  if (busy.value === true)
   {
-    alert('New email address field is empty.');
     return;
   }
 
-  if (newEmail.value !== newEmail2.value)
+  busy.value = true;
+
+  if (changingEmail.value === false)
   {
-    alert('New email and confirm new email address fields do not match.');
+    if (!newEmail.value)
+    {
+      alert('New email address field is empty.');
+      busy.value = false;
+      return;
+    }
+
+    if (newEmail.value !== newEmail2.value)
+    {
+      alert('New email and confirm new email address fields do not match.');
+      busy.value = false;
+      return;
+    }
+
+    const emailModRequestContext = {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+      },
+      body: JSON.stringify({
+        NewEmail: newEmail.value.replace(/ /g, '')
+      })
+    };
+
+    const response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.CHANGE_EMAIL}`,
+        emailModRequestContext
+    );
+
+    if (!response.ok)
+    {
+      switch (response.status)
+      {
+        case 403:
+          alert('Email address modification request rejected because the domain is blacklisted.\n\nPlease do not use throwaway email service providers for this account!');
+          newEmail.value = '';
+          newEmail2.value = '';
+          busy.value = false;
+          return;
+        case 409:
+          alert(`Email address modification request rejected because the email address ${newEmail.value} is already in use!`);
+          newEmail.value = '';
+          newEmail2.value = '';
+          busy.value = false;
+          return;
+        default:
+          alert('Email address modification request rejected. Please double-check your input and try again.');
+          busy.value = false;
+          return;
+      }
+    }
+
+    busy.value = false;
+    changingEmail.value = true;
+  }
+  else
+  {
+    if (!newEmailTotp.value)
+    {
+      alert('Confirmation code field empty.\n\nPlease enter the confirmation code that was sent to your new email address.');
+      busy.value = false;
+      return;
+    }
+
+    const emailModRequestContext = {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+      },
+      body: JSON.stringify({
+        NewEmail: newEmail.value.replace(/ /g, ''),
+        Totp: newEmailTotp.value.replace(/ /g, '')
+      })
+    };
+
+    const response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.CHANGE_EMAIL_CONFIRM}`,
+        emailModRequestContext
+    );
+
+    if (!response.ok)
+    {
+      switch (response.status)
+      {
+        case 409:
+          alert(`Email address modification request rejected because the email address "${newEmail.value}" is already in use!`);
+          newEmail.value = '';
+          newEmail2.value = '';
+          busy.value = false;
+          return;
+        default:
+          alert('Email address modification request rejected. Please double-check your confirmation code and try again.');
+          busy.value = false;
+          return;
+      }
+    }
+
+    busy.value = false;
+    changingEmail.value = false;
+
+    alert('Email address modified successfully. Please login again using your new credentials.');
+    logout();
+  }
+}
+
+function onClickEnable2FA()
+{
+  if (busy.value === true)
+  {
     return;
   }
 
-  //todo
+  busy.value = true;
+
+  // todo
+}
+
+function onClickDisable2FA()
+{
+  if (!confirm('Are you sure?\n\nTwo-Factor Authentication adds a considerable amount of security to your account.\n\nDisabling 2FA will decrease your account\'s security!'))
+  {
+    return;
+  }
+
+  // todo
 }
 
 function onClickDeleteAccount(): void
 {
+  if (busy.value === true)
+  {
+    return;
+  }
+
+  busy.value = true;
+
   // todo: impl
 }
 
@@ -332,7 +468,6 @@ function onClickDeleteAccount(): void
                      id="email"
                      class="form-control"
                      placeholder="Enter your current email"
-                     style="cursor: not-allowed;"
                      readonly
                      :value="user?.Email">
             </div>
@@ -349,6 +484,7 @@ function onClickDeleteAccount(): void
                      id="email"
                      class="form-control"
                      v-model="newEmail"
+                     :readonly="changingEmail"
                      placeholder="Enter your new email address">
             </div>
 
@@ -364,8 +500,25 @@ function onClickDeleteAccount(): void
                      id="email"
                      class="form-control"
                      v-model="newEmail2"
+                     :readonly="changingEmail"
                      placeholder="Re-enter your new email address">
             </div>
+
+            <div class="form-group my-2"
+                 v-if="changingEmail">
+
+              <label for="email"
+                     class="form-label">
+                Confirmation code
+              </label>
+
+              <input type="text"
+                     maxlength="8"
+                     class="form-control"
+                     v-model="newEmailTotp"
+                     placeholder="Please enter the confirmation code that was sent to your new email address">
+            </div>
+
 
             <div style="margin-top: 32px;"></div>
 
@@ -396,22 +549,19 @@ function onClickDeleteAccount(): void
             </h5>
           </div>
 
-          <div class="card-body">
+          <div class="card-body"
+               v-if="user?.TotpEnabled === false">
 
-            <div class="form-group my-2">
-
-              <label for="email"
-                     class="form-label">
-                Current Email
-              </label>
-
-              <input type="email"
-                     name="email"
-                     id="email"
-                     class="form-control"
-                     placeholder="Enter your current email"
-                     value="john.doe@example.net">
-            </div>
+            <p>
+              Great idea!
+              <br />
+              <br />
+              In fact, Two-Factor Authentication adds a substantial layer of security to your user account.
+              <br />
+              To find out more about what 2FA is, check out its
+              <a href="https://en.wikipedia.org/wiki/Multi-factor_authentication"
+                 target="_blank">Wikipedia article</a>.
+            </p>
 
             <div style="margin-top: 32px;"></div>
 
@@ -419,11 +569,17 @@ function onClickDeleteAccount(): void
 
               <button type="submit"
                       :disabled="busy"
-                      class="btn btn-primary bdmp-button">
-                Save
+                      @click="onClickEnable2FA"
+                      class="btn btn-success bdmp-button">
+                Enable two-factor authentication
               </button>
 
             </div>
+
+          </div>
+
+          <div class="card-body"
+               v-else>
 
           </div>
 
@@ -496,6 +652,12 @@ function onClickDeleteAccount(): void
 
 .row {
   justify-content: center;
+}
+
+@media (max-width: 512px) {
+  button {
+    width: 100%;
+  }
 }
 
 </style>
