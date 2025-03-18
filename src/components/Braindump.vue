@@ -1,7 +1,7 @@
 <script setup
         lang="ts">
 
-import {onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
@@ -14,6 +14,7 @@ import Tools from "@/components/Tools.vue";
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
 
+let selectedMenuItem = ref(0);
 let dumps: Array<Braindump> = [];
 let refreshing: boolean = false;
 let ready: boolean = false;
@@ -172,6 +173,11 @@ function refresh()
   });
 }
 
+function onSelectedMenuItem(itemIndex: number)
+{
+  selectedMenuItem.value = itemIndex;
+}
+
 </script>
 
 <template>
@@ -198,7 +204,8 @@ function refresh()
             Menu
           </li>
 
-          <li class="sidebar-item active">
+          <li :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(0)">
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-person-circle"></i>
@@ -208,7 +215,8 @@ function refresh()
             </a>
           </li>
 
-          <li class="sidebar-item">
+          <li :class="`sidebar-item ${selectedMenuItem === 1 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(1)">
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-wrench-adjustable"></i>
@@ -335,9 +343,9 @@ function refresh()
 
     <div class="page-content">
 
-<!--      <Account />-->
+      <Account v-if="selectedMenuItem === 0" />
 
-      <Tools />
+      <Tools v-if="selectedMenuItem === 1" />
 
     </div>
 

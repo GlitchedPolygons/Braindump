@@ -314,7 +314,11 @@ function aesFieldCheck(): boolean
   justify-content: center;
   gap: 16px;
   margin-top: -16px;
-  margin-bottom: 16px;
+  margin-bottom: -8px;
+}
+
+.card-body {
+  margin-bottom: -12px;
 }
 
 </style>
