@@ -5,11 +5,12 @@ import config from "@/assets/config.json"
 import Login from "@/components/Login.vue";
 import Braindump from "@/components/Braindump.vue";
 
-import {onMounted} from "vue";
-import {TypeNamesDTO, LocalStorageKeys, EndpointURLs} from "@/constants.ts";
+import {onMounted, ref} from "vue";
+import {TypeNamesDTO, LocalStorageKeys, EndpointURLs, Constants} from "@/constants.ts";
 import {getUnixTimestamp, logout} from "@/util.ts";
 
 let lastAuthTokenRefreshUTC: number = 0;
+let showLoginPage = ref(true);
 
 onMounted(() =>
 {
@@ -20,6 +21,10 @@ onMounted(() =>
     lastAuthTokenRefreshUTC = 0;
   }
 
+  showLoginPage.value = isLoginRequired();
+
+  refreshAuthToken();
+
   setInterval
   (
       () =>
@@ -28,8 +33,6 @@ onMounted(() =>
       },
       1024 * 8
   );
-
-  refreshAuthToken();
 
   loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js', 'vktDQfr/Ikhrtti/FA+u5LohNzPpFSlhp9Xj+rER/Vs=');
   loadExternalScript('https://mazer-template.pages.dev/demo/assets/compiled/js/app.js', 'l8rWVyz/sArb+OzMOB2mU9LHrvbrOPCJEsnIyYbC8Gk=');
@@ -76,12 +79,29 @@ document.onvisibilitychange = () =>
 
 function isLoginRequired(): boolean
 {
-  return !localStorage.getItem(LocalStorageKeys.AUTH_TOKEN) || !localStorage.getItem(LocalStorageKeys.PASSWORD_HASH);
+  if (!localStorage.getItem(LocalStorageKeys.AUTH_TOKEN))
+  {
+    return true;
+  }
+
+  if (!localStorage.getItem(LocalStorageKeys.PASSWORD_HASH))
+  {
+    return true;
+  }
+
+  if (getUnixTimestamp() - lastAuthTokenRefreshUTC > Constants.AUTH_TOKEN_DEFIBRILLATION_INTERVAL_SECONDS)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 function refreshAuthToken()
 {
-  if (isLoginRequired())
+  const loginRequired: boolean = isLoginRequired();
+
+  if (!loginRequired)
   {
     return;
   }
@@ -89,14 +109,15 @@ function refreshAuthToken()
   const expiredToken: string = localStorage.getItem(LocalStorageKeys.AUTH_TOKEN) ?? '';
   const defibrillatorToken: string = localStorage.getItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN) ?? '';
 
-  if (!defibrillatorToken)
+  if (!expiredToken || !defibrillatorToken)
   {
+    showLoginPage.value = true;
     return;
   }
 
   const utcNow: number = getUnixTimestamp();
 
-  if (utcNow - lastAuthTokenRefreshUTC < 512)
+  if (utcNow - lastAuthTokenRefreshUTC < Constants.AUTH_TOKEN_DEFIBRILLATION_INTERVAL_SECONDS)
   {
     return;
   }
@@ -137,6 +158,8 @@ function refreshAuthToken()
             }
 
             localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
+
+            showLoginPage.value = false;
           }
         });
       }
@@ -147,7 +170,7 @@ function refreshAuthToken()
 
 <template>
 
-  <Login v-if="isLoginRequired()" />
+  <Login v-if="showLoginPage" />
 
   <Braindump v-else />
 

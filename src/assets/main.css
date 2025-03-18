@@ -13,3 +13,19 @@
 .tools-aes-input-label {
     font-size: 1.05rem !important;
 }
+
+input[readonly] {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+button:disabled,
+button[disabled],
+button[disabled=disabled] {
+    cursor: not-allowed !important;
+    pointer-events: all !important;
+}

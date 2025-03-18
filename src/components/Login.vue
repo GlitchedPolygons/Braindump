@@ -5,7 +5,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, getUnixTimestamp, selectOnFocus} from "@/util.ts";
+import {getUnixTimestamp, selectOnFocus, sha256} from "@/util.ts";
 
 declare var bootstrap: any;
 
@@ -47,7 +47,7 @@ async function login()
 
   loggingIn.value = true;
 
-  const passwordHash = arrayBufferToHexEncodedString(await window.crypto.subtle.digest('SHA-256', textEncoder.encode(password.value)));
+  const passwordHash = await sha256(password.value);
 
   const requestContext = {
     method: 'POST',

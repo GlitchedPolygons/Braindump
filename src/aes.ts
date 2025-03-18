@@ -1,5 +1,11 @@
 import {getUnixTimestamp} from "@/util.ts";
 import {LocalStorageKeys} from "@/constants.ts";
+import {reactive} from "vue";
+
+export const aesKeyStore = reactive({
+    aesKey: '',
+    encryptedAesKeyGuid: ''
+});
 
 export class AES
 {

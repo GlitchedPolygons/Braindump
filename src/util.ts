@@ -27,3 +27,54 @@ export function selectOnFocus(event: Event): void
     const a = event.target as HTMLInputElement;
     a?.select();
 }
+
+export async function sha256(value: string): Promise<string>
+{
+    const textEncoder = new TextEncoder();
+    return arrayBufferToHexEncodedString(await window.crypto.subtle.digest('SHA-256', textEncoder.encode(value)));
+}
+
+export function containsUppercaseCharacters(string: string): boolean
+{
+    return /[A-Z]/.test(string);
+}
+
+export function containsLowercaseCharacters(string: string): boolean
+{
+    return /[a-z]/.test(string);
+}
+
+export function containsNumberCharacters(string: string): boolean
+{
+    return /[0-9]/.test(string);
+}
+
+export function isPasswordShitty(password: string): boolean
+{
+    if (!password)
+    {
+        return true;
+    }
+
+    if (password.length < 7)
+    {
+        return true;
+    }
+
+    if (!containsUppercaseCharacters(password))
+    {
+        return true;
+    }
+
+    if (!containsLowercaseCharacters(password))
+    {
+        return true;
+    }
+
+    if (!containsNumberCharacters(password))
+    {
+        return true;
+    }
+
+    return false;
+}

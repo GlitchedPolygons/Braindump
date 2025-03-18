@@ -3,7 +3,7 @@
 
 import {selectOnFocus} from "@/util.ts";
 import {ref} from "vue";
-import {AES} from "@/aes.ts";
+import {AES, aesKeyStore} from "@/aes.ts";
 import {clearTimeout} from "node:timers";
 
 const aes: AES = new AES();
