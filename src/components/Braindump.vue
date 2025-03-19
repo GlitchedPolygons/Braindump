@@ -13,14 +13,15 @@ import BraindumpEditor from "@/components/BraindumpEditor.vue";
 import ImportBraindumps from "@/components/ImportBraindumps.vue";
 import ExportBraindumps from "@/components/ExportBraindumps.vue";
 import {type Braindump, braindumpStore} from "@/braindump.ts";
+import ListBraindumps from "@/components/ListBraindumps.vue";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
 
-let selectedMenuItem = ref(0);
+let selectedMenuItem = ref(3);
 let dumps: Array<Braindump> = [];
 let refreshing: boolean = false;
-let ready: boolean = false;
+let ready = ref(false);
 
 onMounted(() =>
 {
@@ -102,7 +103,7 @@ function refresh()
 
           aesKeyStore.aesKey = aesKey;
 
-          ready = true;
+          ready.value = true;
         }
         catch (e)
         {
@@ -146,12 +147,12 @@ function refresh()
 
         aesKeyStore.encryptedAesKeyGuid = encryptedAesKeyGuid;
 
-        ready = true;
+        ready.value = true;
       }
     });
   }).catch(error =>
   {
-    ready = false;
+    ready.value = false;
     logout();
   });
 
@@ -249,28 +250,6 @@ function onSelectedMenuItem(itemIndex: number)
             </a>
           </li>
 
-          <!--
-          <li class="sidebar-item has-sub">
-            <a href="javascript:void(0);"
-               class='sidebar-link'>
-              <i class="bi bi-stack"></i>
-              <span>Dumps</span>
-            </a>
-
-            <ul class="submenu">
-              <li class="submenu-item">
-                <a href="component-accordion.html"
-                   class="submenu-link">Accordion</a>
-              </li>
-
-              <li class="submenu-item">
-                <a href="component-alert.html"
-                   class="submenu-link">Alert</a>
-              </li>
-            </ul>
-          </li>
-          -->
-
           <li style="list-style-type: none;">
             <hr />
           </li>
@@ -288,8 +267,21 @@ function onSelectedMenuItem(itemIndex: number)
 
           </li>
 
-          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''}`"
+          <li :class="`mt-3 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''}`"
               @click="onSelectedMenuItem(3)">
+
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-list"></i>
+              <span>
+                List
+              </span>
+            </a>
+
+          </li>
+
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(4)">
 
             <a href="javascript:void(0);"
                class='sidebar-link'>
@@ -301,8 +293,8 @@ function onSelectedMenuItem(itemIndex: number)
 
           </li>
 
-          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''}`"
-              @click="onSelectedMenuItem(4)">
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 5 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(5)">
 
             <a href="javascript:void(0);"
                class='sidebar-link'>
@@ -325,7 +317,7 @@ function onSelectedMenuItem(itemIndex: number)
 
         </ul>
 
-        <div class="footer clearfix mt-5 mb-0 text-muted">
+        <div class="footer clearfix mt-lg-5 mb-0 text-muted">
           <hr />
           <div style="margin-left: 16px;">
             <p>
@@ -387,9 +379,11 @@ function onSelectedMenuItem(itemIndex: number)
 
       <BraindumpEditor v-if="selectedMenuItem === 2" />
 
-      <ImportBraindumps v-if="selectedMenuItem === 3" />
+      <ListBraindumps v-if="selectedMenuItem === 3" />
 
-      <ExportBraindumps v-if="selectedMenuItem === 4" />
+      <ImportBraindumps v-if="selectedMenuItem === 4" />
+
+      <ExportBraindumps v-if="selectedMenuItem === 5" />
 
     </div>
 
