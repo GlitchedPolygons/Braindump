@@ -244,7 +244,7 @@ function aesFieldCheck(): boolean
                               rows="8"></textarea>
 
                       <label class="tools-aes-input-label unselectable">
-                        Input &nbsp;
+                        &nbsp;Input&nbsp;
 
                         <a href="javascript:void(0);"
                            title="Copy to clipboard"
@@ -290,7 +290,7 @@ function aesFieldCheck(): boolean
                               rows="8"></textarea>
 
                       <label class="tools-aes-input-label unselectable">
-                        Output &nbsp;
+                        &nbsp;Output&nbsp;
 
                         <a href="javascript:void(0);"
                            title="Copy to clipboard"
