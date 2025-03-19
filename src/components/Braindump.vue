@@ -10,6 +10,8 @@ import {AES, aesKeyStore} from "@/aes.ts";
 import Account from "@/components/Account.vue";
 import Tools from "@/components/Tools.vue";
 import BraindumpEditor from "@/components/BraindumpEditor.vue";
+import ImportBraindumps from "@/components/ImportBraindumps.vue";
+import ExportBraindumps from "@/components/ExportBraindumps.vue";
 import {type Braindump, braindumpStore} from "@/braindump.ts";
 
 const aes: AES = new AES();
@@ -286,6 +288,32 @@ function onSelectedMenuItem(itemIndex: number)
 
           </li>
 
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(3)">
+
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-dropbox"></i>
+              <span>
+                Import
+              </span>
+            </a>
+
+          </li>
+
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''}`"
+              @click="onSelectedMenuItem(4)">
+
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-box-seam-fill"></i>
+              <span>
+                Export
+              </span>
+            </a>
+
+          </li>
+
           <li class="sidebar-item"
               v-for="dump in dumps">
             <a href="javascript:void(0);"
@@ -358,6 +386,10 @@ function onSelectedMenuItem(itemIndex: number)
       <Tools v-if="selectedMenuItem === 1" />
 
       <BraindumpEditor v-if="selectedMenuItem === 2" />
+
+      <ImportBraindumps v-if="selectedMenuItem === 3" />
+
+      <ExportBraindumps v-if="selectedMenuItem === 4" />
 
     </div>
 
