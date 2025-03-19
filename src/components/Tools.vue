@@ -30,14 +30,14 @@ async function onClickGenerateKey()
   toolsAesKey.value = await aes.generateKey();
 }
 
-function onClickCopyKey()
+function onClickCopy(value: string): void
 {
-  if (!toolsAesKey.value)
+  if (!value)
   {
     return;
   }
 
-  navigator.clipboard.writeText(toolsAesKey.value);
+  navigator.clipboard.writeText(value);
 
   copied.value = true;
 
@@ -201,8 +201,9 @@ function aesFieldCheck(): boolean
 
                       <button class="btn btn-primary"
                               type="button"
+                              title="Copy to clipboard"
                               :disabled="!toolsAesKey"
-                              @click="onClickCopyKey"
+                              @click="onClickCopy(toolsAesKey)"
                               id="tools-aes-keygen">
 
                         <i class="bi bi-copy"
@@ -243,7 +244,18 @@ function aesFieldCheck(): boolean
                               rows="8"></textarea>
 
                       <label class="tools-aes-input-label unselectable">
-                        Input
+                        Input &nbsp;
+
+                        <a href="javascript:void(0);"
+                           title="Copy to clipboard"
+                           @click="onClickCopy(toolsAesInput)">
+                          <i class="bi bi-copy"
+                             v-if="!copied"></i>
+
+                          <i class="bi bi-check-circle"
+                             v-if="copied"></i>
+                        </a>
+
                       </label>
 
                     </div>
@@ -278,7 +290,17 @@ function aesFieldCheck(): boolean
                               rows="8"></textarea>
 
                       <label class="tools-aes-input-label unselectable">
-                        Output
+                        Output &nbsp;
+
+                        <a href="javascript:void(0);"
+                           title="Copy to clipboard"
+                           @click="onClickCopy(toolsAesOutput)">
+                          <i class="bi bi-copy"
+                             v-if="!copied"></i>
+
+                          <i class="bi bi-check-circle"
+                             v-if="copied"></i>
+                        </a>
                       </label>
 
                     </div>
@@ -324,6 +346,16 @@ function aesFieldCheck(): boolean
 
 .card-body {
   margin-bottom: -12px;
+}
+
+@media (max-width: 512px) {
+  .accordion-body {
+    padding: 0 !important;
+  }
+
+  input, .btn {
+    font-size: 0.89rem !important;
+  }
 }
 
 </style>
