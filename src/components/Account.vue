@@ -522,20 +522,6 @@ async function onClickDeleteAccount(): Promise<void>
 
       </div>
 
-      <!--
-      <div class="col-12 col-md-6 order-md-2 order-first">
-        <nav aria-label="breadcrumb"
-             class="breadcrumb-header float-start float-lg-end">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
-            <li class="breadcrumb-item active"
-                aria-current="page">Security
-            </li>
-          </ol>
-        </nav>
-      </div>
-      -->
-
     </div>
 
   </div>
@@ -567,8 +553,8 @@ async function onClickDeleteAccount(): Promise<void>
               </label>
 
               <input type="password"
-                     name="current_password"
-                     id="current_password"
+                     name="current-password"
+                     id="current-password"
                      class="form-control"
                      v-model="oldPassword"
                      v-on:keyup.enter="onClickChangePassword();"
@@ -578,14 +564,14 @@ async function onClickDeleteAccount(): Promise<void>
 
             <div class="form-group my-2">
 
-              <label for="password"
+              <label for="new-password"
                      class="form-label">
                 New password
               </label>
 
               <input type="password"
-                     name="password"
-                     id="password"
+                     name="new-password"
+                     id="new-password"
                      class="form-control"
                      v-model="newPassword"
                      placeholder="Enter new password"
@@ -595,14 +581,14 @@ async function onClickDeleteAccount(): Promise<void>
 
             <div class="form-group my-2">
 
-              <label for="confirm_password"
+              <label for="confirm-password"
                      class="form-label">
                 Confirm new password
               </label>
 
               <input type="password"
-                     name="confirm_password"
-                     id="confirm_password"
+                     name="confirm-password"
+                     id="confirm-password"
                      class="form-control"
                      v-model="newPassword2"
                      v-on:keyup.enter="onClickChangePassword();"
