@@ -366,25 +366,68 @@ async function onClickEnable2FA(): Promise<void>
     busy.value = false;
     totpSecret.value = '';
     totpSecretQR.value = '';
+    enableTotpCode.value = '';
     enablingTotp.value = false;
+    disablingTotp.value = false;
+
+    alert('Two-factor authentication has been enabled successfully for your user account. Kudos for improving your opsec! 😃');
     await refreshUserAccount();
   }
 }
 
-function onClickDisable2FA()
+async function onClickDisable2FA(): Promise<void>
 {
+  if (busy.value === true)
+  {
+    return;
+  }
+
   if (disablingTotp.value === false)
   {
+    disableTotpCode.value = '';
     disablingTotp.value = true;
     return;
   }
 
   if (!confirm('Are you sure?\n\nTwo-Factor Authentication adds a considerable amount of security to your account.\n\nDisabling 2FA will decrease your account\'s security!'))
   {
+    disablingTotp.value = false;
     return;
   }
 
-  // todo
+  busy.value = true;
+
+  const requestContext = {
+    method: 'PUT',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+    },
+    body: JSON.stringify({
+      Totp: disableTotpCode.value.replace(/ /g, '')
+    })
+  };
+
+  const response = await fetch
+  (
+      `${config.BackendBaseURL}${EndpointURLs.DISABLE_2FA}`,
+      requestContext
+  );
+
+  if (!response.ok)
+  {
+    alert(`Two-factor authentication deactivation request rejected. Please double-check your input and try again.`);
+    busy.value = false;
+    return;
+  }
+
+  alert('Two-factor authentication has been disabled successfully for your user account. Consider re-enabling it soon!');
+
+  busy.value = false;
+  enablingTotp.value = false;
+  disablingTotp.value = false;
+
+  await refreshUserAccount();
 }
 
 function onClickCopyTotpSecret(): void
@@ -482,71 +525,70 @@ function onClickDeleteAccount(): void
 
           <div class="card-body">
 
-            <form action="#"
-                  method="get">
+            <div class="form-group my-2">
 
-              <div class="form-group my-2">
+              <label for="current_password"
+                     class="form-label">
+                Current password
+              </label>
 
-                <label for="current_password"
-                       class="form-label">
-                  Current password
-                </label>
+              <input type="password"
+                     name="current_password"
+                     id="current_password"
+                     class="form-control"
+                     v-model="oldPassword"
+                     v-on:keyup.enter="onClickChangePassword();"
+                     placeholder="Enter your current password"
+                     value="">
+            </div>
 
-                <input type="password"
-                       name="current_password"
-                       id="current_password"
-                       class="form-control"
-                       v-model="oldPassword"
-                       placeholder="Enter your current password"
-                       value="">
-              </div>
+            <div class="form-group my-2">
 
-              <div class="form-group my-2">
+              <label for="password"
+                     class="form-label">
+                New password
+              </label>
 
-                <label for="password"
-                       class="form-label">
-                  New password
-                </label>
+              <input type="password"
+                     name="password"
+                     id="password"
+                     class="form-control"
+                     v-model="newPassword"
+                     placeholder="Enter new password"
+                     v-on:keyup.enter="onClickChangePassword();"
+                     value="">
+            </div>
 
-                <input type="password"
-                       name="password"
-                       id="password"
-                       class="form-control"
-                       v-model="newPassword"
-                       placeholder="Enter new password"
-                       value="">
-              </div>
+            <div class="form-group my-2">
 
-              <div class="form-group my-2">
+              <label for="confirm_password"
+                     class="form-label">
+                Confirm new password
+              </label>
 
-                <label for="confirm_password"
-                       class="form-label">
-                  Confirm new password
-                </label>
+              <input type="password"
+                     name="confirm_password"
+                     id="confirm_password"
+                     class="form-control"
+                     v-model="newPassword2"
+                     v-on:keyup.enter="onClickChangePassword();"
+                     placeholder="Re-enter new password"
+                     value="">
+            </div>
 
-                <input type="password"
-                       name="confirm_password"
-                       id="confirm_password"
-                       class="form-control"
-                       v-model="newPassword2"
-                       placeholder="Re-enter new password"
-                       value="">
-              </div>
+            <div style="margin-top: 32px;"></div>
 
-              <div style="margin-top: 32px;"></div>
+            <div class="form-group my-2 d-flex justify-content-end">
 
-              <div class="form-group my-2 d-flex justify-content-end">
+              <button type="button"
+                      :disabled="busy"
+                      @click="onClickChangePassword"
+                      class="btn btn-primary bdmp-button">
+                Save
+              </button>
 
-                <button type="button"
-                        :disabled="busy"
-                        @click="onClickChangePassword"
-                        class="btn btn-primary bdmp-button">
-                  Save
-                </button>
+            </div>
 
-              </div>
-
-            </form>
 
           </div>
 
@@ -595,6 +637,7 @@ function onClickDeleteAccount(): void
                      class="form-control"
                      v-model="newEmail"
                      :readonly="changingEmail"
+                     v-on:keyup.enter="onClickChangeEmail();"
                      placeholder="Enter your new email address">
             </div>
 
@@ -611,6 +654,7 @@ function onClickDeleteAccount(): void
                      class="form-control"
                      v-model="newEmail2"
                      :readonly="changingEmail"
+                     v-on:keyup.enter="onClickChangeEmail();"
                      placeholder="Re-enter your new email address">
             </div>
 
@@ -626,6 +670,7 @@ function onClickDeleteAccount(): void
                      maxlength="8"
                      class="form-control"
                      v-model="newEmailTotp"
+                     v-on:keyup.enter="onClickChangeEmail();"
                      placeholder="Please enter the confirmation code that was sent to your new email address">
             </div>
 
@@ -752,6 +797,7 @@ function onClickDeleteAccount(): void
                        class="form-control"
                        v-model="enableTotpCode"
                        :readonly="busy"
+                       v-on:keyup.enter="onClickEnable2FA();"
                        placeholder="Enter a valid TOTP">
               </div>
 
@@ -778,7 +824,8 @@ function onClickDeleteAccount(): void
 
             <div v-if="!disablingTotp">
               <p>
-                Are you sure you want to disable two factor authentication?
+                2FA is currently enabled for your account. You can disable it here by entering a valid TOTP one last
+                time and switching back to plain user+password authentication.
               </p>
 
             </div>
@@ -790,10 +837,11 @@ function onClickDeleteAccount(): void
                 <input type="text"
                        name="totp-enable-code"
                        maxlength="8"
-                       style="max-width: 300px;"
+                       style="max-width: 287px;"
                        class="form-control"
                        v-model="disableTotpCode"
                        :readonly="busy"
+                       v-on:keyup.enter="onClickDisable2FA();"
                        placeholder="Enter a valid TOTP">
               </div>
 
@@ -812,8 +860,6 @@ function onClickDeleteAccount(): void
               </button>
 
             </div>
-
-            <!-- TODO: show input field for last TOTP code + disable button here (show a confirmation dialog first before definitively disabling 2FA) -->
 
           </div>
 
