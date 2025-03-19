@@ -2,11 +2,11 @@
         lang="ts">
 
 import {onMounted, ref} from "vue";
+import QrcodeVue from "qrcode.vue";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 import {isPasswordShitty, logout, selectOnFocus, sha256} from "@/util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import QrcodeVue, {type ImageSettings} from "qrcode.vue";
 
 let busy = ref(false);
 let enablingTotp = ref(false);
@@ -454,7 +454,7 @@ function onClickCopyTotpSecret(): void
   setTimeout(() => alert('2FA secret has been copied to clipboard.\n\nCAREFUL! Do not send this to anyone.\n\nBack it up somewhere safe (maybe in a password manager like Bitwarden?)'), 64);
 }
 
-function onClickDeleteAccount(): void
+async function onClickDeleteAccount(): Promise<void>
 {
   if (busy.value === true)
   {
@@ -463,7 +463,41 @@ function onClickDeleteAccount(): void
 
   busy.value = true;
 
-  // todo: impl
+  if (!confirm('Are you sure? This is irreversible: it cannot be undone!'))
+  {
+    busy.value = false;
+    return;
+  }
+
+  if (!confirm('Are you ABSOLUTELY sure?\n\nLast warning!\n\nYour user account and all of your braindumps and data will be deleted immediately.'))
+  {
+    busy.value = false;
+    return;
+  }
+
+  const requestContext = {
+    method: 'DELETE',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+    }
+  };
+
+  const response = await fetch
+  (
+      `${config.BackendBaseURL}${EndpointURLs.USERS}`,
+      requestContext
+  );
+
+  if (!response.ok)
+  {
+    alert(`User deletion request failed. Error: ${response.status} (${response.statusText})`);
+    busy.value = false;
+    return;
+  }
+
+  alert('User account has been deleted successfully.');
+  logout();
 }
 
 </script>
@@ -809,8 +843,8 @@ function onClickDeleteAccount(): void
 
               <button type="submit"
                       :disabled="busy"
+                      id="enable-2fa-button"
                       @click="onClickEnable2FA"
-                      style="max-width: 285px;"
                       class="btn btn-success bdmp-button">
                 Enable two-factor authentication
               </button>
@@ -854,7 +888,7 @@ function onClickDeleteAccount(): void
               <button type="submit"
                       :disabled="busy"
                       @click="onClickDisable2FA"
-                      style="max-width: 300px;"
+                      id="disable-2fa-button"
                       class="btn btn-danger bdmp-button">
                 Disable two-factor authentication
               </button>
@@ -930,9 +964,22 @@ function onClickDeleteAccount(): void
   justify-content: center;
 }
 
+#enable-2fa-button {
+  max-width: 285px;
+}
+
+#disable-2fa-button {
+  max-width: 300px;
+}
+
 @media (max-width: 512px) {
   button {
     width: 100%;
+  }
+
+  #enable-2fa-button, #disable-2fa-button {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
   }
 }
 

@@ -406,4 +406,12 @@ function onSelectedMenuItem(itemIndex: number)
   font-weight: bold !important;
 }
 
+.sidebar-wrapper {
+  /* border-right: solid #73737321 1px; */
+}
+
+hr {
+  color: rgba(172, 172, 172, 0.69) !important;
+}
+
 </style>
