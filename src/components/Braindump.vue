@@ -7,9 +7,10 @@ import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {logout} from "@/util.ts";
 import {AES, aesKeyStore} from "@/aes.ts";
-import type {Braindump} from "@/braindump.ts";
 import Account from "@/components/Account.vue";
 import Tools from "@/components/Tools.vue";
+import BraindumpEditor from "@/components/BraindumpEditor.vue";
+import {type Braindump, braindumpStore} from "@/braindump.ts";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -278,8 +279,8 @@ function onSelectedMenuItem(itemIndex: number)
 
           <li class="sidebar-item">
 
-            <button class="btn btn-success"
-                    style="width: 100%; font-weight: bold;">
+            <button class="btn btn-success create-dump-button"
+                    @click="braindumpStore.editedBraindump = null; onSelectedMenuItem(2)">
               + Create new dump
             </button>
 
@@ -356,6 +357,8 @@ function onSelectedMenuItem(itemIndex: number)
 
       <Tools v-if="selectedMenuItem === 1" />
 
+      <BraindumpEditor v-if="selectedMenuItem === 2" />
+
     </div>
 
     <!--
@@ -387,6 +390,7 @@ function onSelectedMenuItem(itemIndex: number)
       </div>
     </footer>
     -->
+
   </div>
 
 </template>
@@ -395,6 +399,11 @@ function onSelectedMenuItem(itemIndex: number)
 
 .page-content {
   min-height: 1024px;
+}
+
+.create-dump-button {
+  width: 100%;
+  font-weight: bold !important;
 }
 
 </style>
