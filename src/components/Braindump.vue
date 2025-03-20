@@ -429,6 +429,8 @@ function onSelectedMenuItem(itemIndex: number)
 
 .create-dump-button {
   width: 100%;
+  height: 46px;
+  border-radius: 0.5rem !important;
   font-weight: bold !important;
 }
 
