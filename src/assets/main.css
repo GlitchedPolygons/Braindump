@@ -31,26 +31,6 @@ button[disabled=disabled] {
     pointer-events: all !important;
 }
 
-html h6,
-html .h6,
-html h5,
-html .h5,
-html h4,
-html .h4,
-html h3,
-html .h3,
-html h2,
-html .h2,
-html h1,
-html .h1 {
-    margin-top: unset !important;
-    margin-bottom: unset !important;
-    font-weight: unset !important;
-    line-height: unset !important;
-    font-size: unset !important;
-    color: var(--bs-heading-color);
-}
-
 .md-editor-dark {
     background-color: #12121c !important;
 }
@@ -59,6 +39,15 @@ html .h1 {
     background-color: #151521;
 }
 
-.md-editor-resize-operate{
+.md-editor-resize-operate {
     background-color: rgba(45, 45, 45, 0.225) !important;
+}
+
+svg.md-editor-icon {
+    width: 27px !important;
+    height: 27px !important;
+}
+
+.md-editor-preview .md-editor-code .md-editor-code-head .md-editor-code-flag {
+    opacity: 0;
 }

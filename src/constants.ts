@@ -8,6 +8,7 @@ export const LocalStorageKeys = Object.freeze
         LAST_USERNAME: 'lastUsername',
         LAST_AUTH_TOKEN_REFRESH_UTC: 'lastAuthTokenRefreshUTC',
         SAVE_DEFIBRILLATOR_TOKEN: 'saveDefibrillatorToken',
+        DRAFT: 'draft',
     }
 );
 

@@ -1,10 +1,10 @@
 <script setup
         lang="ts">
 
+import 'md-editor-v3/lib/style.css';
 import {onMounted, reactive, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
-import {MdEditor} from 'md-editor-v3';
-import 'md-editor-v3/lib/style.css';
+import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {LocalStorageKeys} from "@/constants.ts";
 
 let editing = ref(true);
@@ -19,14 +19,80 @@ let edited = ref({
   Private: true,
 });
 
-let md = ref('# Heading 1\n\n## Heading 2');
+let md = ref('');
+
+let busy = ref(false);
 
 const state = reactive({
   text: '',
   theme: 'dark',
 });
 
-let busy = ref(false);
+const toolbar = [
+  'revoke',
+  'next',
+
+  '-',
+
+  'task',
+  'unorderedList',
+  'orderedList',
+
+  '-',
+
+  'bold',
+  'italic',
+  'strikeThrough',
+
+  '-',
+
+  'title',
+  'sub',
+  'sup',
+
+  '-',
+
+  'quote',
+  'codeRow',
+  'code',
+
+  '-',
+
+  'link',
+  'image',
+  'table',
+  'mermaid',
+  'katex',
+
+  '=',
+
+  'pageFullscreen',
+  'preview',
+  'previewOnly',
+];
+
+config({
+  editorConfig: {
+    renderDelay: 64
+  },
+  markdownItPlugins(plugins, {editorId})
+  {
+    return plugins.map((item) =>
+    {
+      if (item.type === 'taskList')
+      {
+        return {
+          ...item,
+          options: {
+            ...item.options,
+            enabled: true,
+          },
+        };
+      }
+      return item;
+    });
+  },
+});
 
 onMounted(() =>
 {
@@ -44,6 +110,16 @@ onMounted(() =>
 
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
 });
+
+function onChangedMarkdown(markdown: string): void
+{
+  // todo
+}
+
+function onClickCancel(): void
+{
+  // todo
+}
 
 async function onClickSaveBraindump(): Promise<void>
 {
@@ -137,12 +213,22 @@ async function onClickSaveBraindump(): Promise<void>
               <MdEditor v-model="md"
                         :maxLength="1048576"
                         noUploadImg
+                        @onChange="onChangedMarkdown"
                         language="en-US"
+                        :toolbars="toolbar"
                         :theme="state.theme" />
 
               <div style="margin-top: 32px;"></div>
 
-              <div class="form-group my-2 d-flex justify-content-end">
+              <div class="form-group my-2 d-flex justify-content-end"
+                   style="gap: 16px;">
+
+                <button type="button"
+                        :disabled="busy"
+                        @click="onClickCancel"
+                        class="btn btn-secondary bdmp-button">
+                  Cancel
+                </button>
 
                 <button type="button"
                         :disabled="busy"
@@ -167,6 +253,8 @@ async function onClickSaveBraindump(): Promise<void>
   </div>
 
   <div v-else>
+
+    <MdPreview :model-value="edited?.Data" />
 
   </div>
 
