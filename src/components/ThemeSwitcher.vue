@@ -1,7 +1,7 @@
 <script setup
         lang="ts">
 
-import {onMounted, type Ref, ref} from "vue";
+import {onMounted, reactive, type Ref, ref} from "vue";
 import {LocalStorageKeys} from "@/constants.ts";
 import config from "@/assets/config.json";
 
@@ -51,6 +51,11 @@ function setTheme(dark: boolean, persist: boolean = false)
   if (persist)
   {
     localStorage.setItem(LocalStorageKeys.THEME, theme);
+  }
+
+  if (window.onChangedTheme)
+  {
+    window.onChangedTheme(theme);
   }
 }
 
