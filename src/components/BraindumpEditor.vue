@@ -135,6 +135,9 @@ async function onClickSaveBraindump(): Promise<void>
               </div>
 
               <MdEditor v-model="md"
+                        :maxLength="1048576"
+                        noUploadImg
+                        language="en-US"
                         :theme="state.theme" />
 
               <div style="margin-top: 32px;"></div>
