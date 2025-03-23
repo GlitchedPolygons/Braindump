@@ -8,6 +8,7 @@ import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {arrayBufferToHexEncodedString, getUnixTimestamp, logout} from "@/util.ts";
 import bdConfig from "@/assets/config.json";
+import {AES, aesKeyStore} from "@/aes.ts";
 
 type ImgUploadCallback = (url: string) => void;
 
@@ -23,9 +24,13 @@ let edited = ref({
   Private: true,
 });
 
-let md = ref('');
+let nameEncryptionTask: Promise<string>;
+let notesEncryptionTask: Promise<string>;
+let markdownEncryptionTask: Promise<string>;
 
 let busy = ref(false);
+
+const aes: AES = new AES();
 
 const state = reactive({
   text: '',
@@ -115,9 +120,35 @@ onMounted(() =>
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
 });
 
+function onChangedName(changeEvent: Event)
+{
+  const element = changeEvent.target as HTMLInputElement;
+
+  if (!element || !element.value)
+  {
+    nameEncryptionTask = new Promise<string>(() => '');
+    return;
+  }
+
+  nameEncryptionTask = aes.encryptString(element?.value ?? '', aesKeyStore.aesKey);
+}
+
+function onChangedNotes(changeEvent: Event)
+{
+  const element = changeEvent.target as HTMLInputElement;
+
+  if (!element || !element.value)
+  {
+    notesEncryptionTask = new Promise<string>(() => '');
+    return;
+  }
+
+  notesEncryptionTask = aes.encryptString(element.value, aesKeyStore.aesKey);
+}
+
 function onChangedMarkdown(markdown: string): void
 {
-  // todo
+  markdownEncryptionTask = aes.encryptString(markdown, aesKeyStore.aesKey);
 }
 
 async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<void>
@@ -135,7 +166,6 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
           form.append('sha256', arrayBufferToHexEncodedString(sha256));
           form.append('filename', `${getUnixTimestamp()}-${file.name}`);
           form.append('filesizebytes', file.size.toString());
-          form.append('notes', edited.value.Notes);
           form.append('private', 'false');
           form.append('file', file);
 
@@ -211,7 +241,12 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
 
 function onClickCancel(): void
 {
-  // todo
+  if (braindumpStore.editedBraindump)
+  {
+    edited.value = braindumpStore.editedBraindump;
+  }
+
+  editing.value = false;
 }
 
 async function onClickSaveBraindump(): Promise<void>
@@ -219,14 +254,130 @@ async function onClickSaveBraindump(): Promise<void>
   if (!edited.value.Name)
   {
     alert('Please enter a name for your braindump.');
+    return;
   }
 
-  if (edited.value.Notes === null)
+  if (edited.value.Notes === null || edited.value.Notes === ' ')
   {
     edited.value.Notes = '';
+    notesEncryptionTask = new Promise<string>(() => '');
   }
 
-  // todo
+  if (!edited.value.Data)
+  {
+    edited.value.Data = '';
+    markdownEncryptionTask = aes.encryptString('', aesKeyStore.aesKey);
+  }
+
+  if (busy.value === true)
+  {
+    return;
+  }
+
+  busy.value = true;
+
+  const encryptedName = nameEncryptionTask ? await nameEncryptionTask : '';
+  const encryptedNotes = notesEncryptionTask ? await notesEncryptionTask : '';
+  const encryptedMarkdown = markdownEncryptionTask ? await markdownEncryptionTask : '';
+
+  /*
+  const nameAvailabilityCheckRequestContext = {
+    method: 'POST',
+    body: JSON.stringify({
+      Name: edited.value.Name,
+    }),
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+    },
+  };
+
+  const nameAvailabilityCheckResponse = await fetch
+  (
+      `${bdConfig.BackendBaseURL}${EndpointURLs.CHECK_NAME_AVAILABILITY}`,
+      nameAvailabilityCheckRequestContext
+  );
+
+  if (!nameAvailabilityCheckResponse.ok)
+  {
+    alert(`The name "${edited.value.Name}" is not available. Please enter a unique name and try again!`);
+    busy.value = false;
+    return;
+  }
+  */
+
+  const saveRequestContext = {
+    method: 'POST',
+    body: JSON.stringify({
+      Private: true,
+      Name: encryptedName,
+      Notes: encryptedNotes,
+      Data: encryptedMarkdown
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+    },
+  };
+
+  const response = await fetch
+  (
+      `${bdConfig.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}`,
+      saveRequestContext
+  );
+
+  busy.value = false;
+
+  if (!response.ok)
+  {
+    switch (response.status)
+    {
+      case 400:
+      {
+        const errorMsg: string = `Upload failed!\n\nErrors:\n${JSON.stringify((await response.json()).errors, null, 2)}`;
+        alert(errorMsg);
+        return;
+      }
+      case 401:
+      case 403:
+      {
+        logout();
+        return;
+      }
+      case 413:
+      {
+        const errorMsg: string = 'Insufficient user quota! Please free some space before continuing.';
+        alert(errorMsg);
+        return;
+      }
+      default:
+      {
+        const errorMsg: string = `Error ${response.status} (${response.statusText})`;
+        alert(errorMsg);
+        return;
+      }
+    }
+  }
+
+  const responseBodyEnvelope = await response.json();
+
+  if (responseBodyEnvelope.Type !== TypeNamesDTO.USER_DATA_RESPONSE_DTO || responseBodyEnvelope.Items.length !== 1)
+  {
+    alert('Save operation failed. Please upload the file and try again.');
+    return;
+  }
+
+  const createdBraindumpResponseDto = responseBodyEnvelope.Items[0];
+
+  edited.value.Guid = createdBraindumpResponseDto.Guid;
+  edited.value.Private = createdBraindumpResponseDto.Private;
+  edited.value.CreationTimestampUTC = createdBraindumpResponseDto.CreationTimestampUTC;
+  edited.value.LastModificationTimestampUTC = createdBraindumpResponseDto.LastModificationTimestampUTC;
+
+  edited.value.Data = await aes.decryptString(createdBraindumpResponseDto.Data, aesKeyStore.aesKey);
+  edited.value.Name = createdBraindumpResponseDto.Name ? await aes.decryptString(createdBraindumpResponseDto.Name, aesKeyStore.aesKey) : '';
+  edited.value.Notes = createdBraindumpResponseDto.Notes ? await aes.decryptString(createdBraindumpResponseDto.Notes, aesKeyStore.aesKey) : '';
+
+  editing.value = false;
 }
 
 </script>
@@ -268,7 +419,7 @@ async function onClickSaveBraindump(): Promise<void>
             <div class="card-header">
 
               <h5 class="card-title">
-                Edit Braindump
+                {{ edited.Guid ? 'Edit' : 'Create' }} Braindump
               </h5>
 
             </div>
@@ -287,6 +438,7 @@ async function onClickSaveBraindump(): Promise<void>
                        name="name"
                        class="form-control"
                        v-model="edited.Name"
+                       @input="onChangedName"
                        v-on:keyup.enter="onClickSaveBraindump();"
                        placeholder="Give your braindump a descriptive title">
               </div>
@@ -306,6 +458,7 @@ async function onClickSaveBraindump(): Promise<void>
                           maxlength="1000"
                           class="form-control"
                           v-model="edited.Notes"
+                          @input="onChangedNotes"
                           placeholder="Enter an optional description of what this braindump is about."></textarea>
 
                 <small class="unselectable"
@@ -315,7 +468,7 @@ async function onClickSaveBraindump(): Promise<void>
 
               </div>
 
-              <MdEditor v-model="md"
+              <MdEditor v-model="edited.Data"
                         :preview="false"
                         :maxLength="1048576"
                         :language="'en-US'"
@@ -333,17 +486,18 @@ async function onClickSaveBraindump(): Promise<void>
                 <button type="button"
                         :disabled="busy"
                         @click="onClickCancel"
-                        style="min-width: 96px;"
+                        style="min-width: 128px;"
+                        v-if="edited.Guid"
                         class="btn btn-secondary bdmp-button">
                   Cancel
                 </button>
 
                 <button type="button"
                         :disabled="busy"
-                        style="min-width: 96px;"
+                        style="min-width: 128px;"
                         @click="onClickSaveBraindump"
                         class="btn btn-primary bdmp-button">
-                  Save
+                  {{ edited.Guid ? 'Save' : 'Create' }}
                 </button>
 
               </div>
@@ -363,10 +517,10 @@ async function onClickSaveBraindump(): Promise<void>
 
   <div v-else>
 
-    <MdPreview :model-value="edited?.Data" />
+    <MdPreview :id="'md-preview'"
+               :model-value="edited?.Data" />
 
   </div>
-
 
 </template>
 

@@ -12,6 +12,11 @@ export function getUnixTimestamp(): number
     return Math.floor(Date.now() / 1000);
 }
 
+export function getDateFromUnixTimestamp(unixTimestamp: number): Date
+{
+    return new Date(unixTimestamp * 1000);
+}
+
 export function logout(reload: boolean = true): void
 {
     localStorage.removeItem(LocalStorageKeys.AUTH_TOKEN);

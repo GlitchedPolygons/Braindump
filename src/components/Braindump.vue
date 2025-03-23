@@ -18,8 +18,7 @@ import ListBraindumps from "@/components/ListBraindumps.vue";
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
 
-let selectedMenuItem = ref(3);
-let dumps: Array<Braindump> = [];
+let selectedMenuItem = ref(-1);
 let refreshing: boolean = false;
 let ready = ref(false);
 
@@ -44,13 +43,17 @@ function refresh()
     return;
   }
 
+  if (!localStorage.getItem(LocalStorageKeys.PASSWORD_HASH))
+  {
+    logout();
+  }
+
   fetch
   (
       `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?nameFilter=${Constants.BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME}`,
       {
         method: 'GET',
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
         },
       }
@@ -110,6 +113,8 @@ function refresh()
 
           aesKeyStore.aesKey = aesKey;
 
+          selectedMenuItem.value = Constants.DEFAULT_BRAINDUMP_PAGE_INDEX;
+
           ready.value = true;
         }
         catch (e)
@@ -154,6 +159,8 @@ function refresh()
 
         aesKeyStore.encryptedAesKeyGuid = encryptedAesKeyGuid;
 
+        selectedMenuItem.value = Constants.DEFAULT_BRAINDUMP_PAGE_INDEX;
+
         ready.value = true;
       }
     });
@@ -162,10 +169,18 @@ function refresh()
     ready.value = false;
     logout();
   });
+}
 
-  fetch
+function onSelectedMenuItem(itemIndex: number)
+{
+  selectedMenuItem.value = itemIndex;
+}
+
+async function openBraindump(dump: Braindump): Promise<void>
+{
+  const response: Response = await fetch
   (
-      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}`,
+      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}/${dump.Guid}`,
       {
         method: 'GET',
         headers: {
@@ -173,29 +188,28 @@ function refresh()
           "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
         },
       }
-  ).then(response =>
-  {
-    if (!response.ok)
-    {
-      //  logout();
-    }
+  );
 
-    response.json().then((responseBodyEnvelope) =>
-    {
-      if (responseBodyEnvelope.Type !== TypeNamesDTO.USER_DATA_REDUX_RESPONSE_DTO)
-      {
-        //logout();
-      }
-    });
-  }).catch(error =>
-  {
-    // logout();
-  });
-}
+  const responseBodyEnvelope = await response?.json();
 
-function onSelectedMenuItem(itemIndex: number)
-{
-  selectedMenuItem.value = itemIndex;
+  if (!response.ok || !responseBodyEnvelope || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length !== 1)
+  {
+    throw new Error();
+  }
+
+  const braindump: Braindump = responseBodyEnvelope.Items[0];
+
+  dump.Guid = braindump.Guid;
+  dump.Private = braindump.Private;
+  dump.CreationTimestampUTC = braindump.CreationTimestampUTC;
+  dump.LastModificationTimestampUTC = braindump.LastModificationTimestampUTC;
+  dump.Name = await aes.decryptString(braindump.Name, aesKeyStore.aesKey);
+  dump.Data = await aes.decryptString(braindump.Data, aesKeyStore.aesKey);
+  dump.Notes = await aes.decryptString(braindump.Notes, aesKeyStore.aesKey);
+
+  braindumpStore.editedBraindump = dump;
+
+  onSelectedMenuItem(2);
 }
 
 </script>
@@ -314,15 +328,6 @@ function onSelectedMenuItem(itemIndex: number)
 
           </li>
 
-          <li class="sidebar-item"
-              v-for="dump in dumps">
-            <a href="javascript:void(0);"
-               class='sidebar-link'>
-              <i class="bi bi-journal-richtext"></i>
-              <span>{{ dump.Name }}</span>
-            </a>
-          </li>
-
         </ul>
 
         <div class="footer clearfix mt-lg-5 mb-0 text-muted">
@@ -387,7 +392,8 @@ function onSelectedMenuItem(itemIndex: number)
 
       <BraindumpEditor v-if="selectedMenuItem === 2" />
 
-      <ListBraindumps v-if="selectedMenuItem === 3" />
+      <ListBraindumps v-if="selectedMenuItem === 3"
+                      @onSelectBraindump="openBraindump" />
 
       <ImportBraindumps v-if="selectedMenuItem === 4" />
 

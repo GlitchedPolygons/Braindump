@@ -1,21 +1,18 @@
 import {reactive} from "vue";
 
+export class Braindump {
+    Guid: string = '';
+    CreationTimestampUTC: number = 0;
+    LastModificationTimestampUTC: number | null = null;
+    Notes: string = '';
+    Name: string = '';
+    Data: string = '';
+    Private: boolean = true;
+};
+
 export const braindumpStore = reactive({
-    editedBraindump: null,
-    draft: {
-        notes: '',
-        markdown: ''
-    },
+    braindumps: [],
+    editedBraindump: new Braindump(),
     loggedIn: false,
     workingOffline: false,
 });
-
-export type Braindump = {
-    Guid: string;
-    CreationTimestampUTC: number;
-    LastModificationTimestampUTC: number | null;
-    Notes: string;
-    Name: string;
-    Data: string;
-    Private: boolean;
-};

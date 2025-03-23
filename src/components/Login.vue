@@ -20,8 +20,6 @@ const username: Ref<string, string> = ref('');
 const password: Ref<string, string> = ref('');
 const totp: Ref<string, string> = ref('');
 
-const textEncoder: TextEncoder = new TextEncoder();
-
 onMounted(async () =>
 {
   const lastUsername = localStorage.getItem(LocalStorageKeys.LAST_USERNAME);
