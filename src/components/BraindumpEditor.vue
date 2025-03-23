@@ -211,27 +211,29 @@ async function onClickSaveBraindump(): Promise<void>
               </div>
 
               <MdEditor v-model="md"
-                        :maxLength="1048576"
                         noUploadImg
-                        @onChange="onChangedMarkdown"
-                        language="en-US"
+                        :maxLength="1048576"
+                        :language="'en-US'"
                         :toolbars="toolbar"
-                        :theme="state.theme" />
+                        :theme="state.theme"
+                        @onChange="onChangedMarkdown" />
 
               <div style="margin-top: 32px;"></div>
 
               <div class="form-group my-2 d-flex justify-content-end"
-                   style="gap: 16px;">
+                   style="gap: 24px;">
 
                 <button type="button"
                         :disabled="busy"
                         @click="onClickCancel"
+                        style="min-width: 96px;"
                         class="btn btn-secondary bdmp-button">
                   Cancel
                 </button>
 
                 <button type="button"
                         :disabled="busy"
+                        style="min-width: 96px;"
                         @click="onClickSaveBraindump"
                         class="btn btn-primary bdmp-button">
                   Save
@@ -271,6 +273,11 @@ async function onClickSaveBraindump(): Promise<void>
   input, textarea, label {
     font-size: 0.89rem !important;
   }
+}
+
+#notes {
+  min-height: 61px;
+  max-height: 420px;
 }
 
 </style>

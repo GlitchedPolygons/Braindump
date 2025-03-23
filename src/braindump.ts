@@ -1,7 +1,13 @@
 import {reactive} from "vue";
 
 export const braindumpStore = reactive({
-    editedBraindump: null
+    editedBraindump: null,
+    draft: {
+        notes: '',
+        markdown: ''
+    },
+    loggedIn: false,
+    workingOffline: false,
 });
 
 export type Braindump = {

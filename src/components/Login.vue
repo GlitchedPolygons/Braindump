@@ -4,6 +4,7 @@
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
+import {braindumpStore} from "@/braindump.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {getUnixTimestamp, selectOnFocus, sha256} from "@/util.ts";
 
@@ -93,6 +94,8 @@ async function login()
         }
 
         window.location.reload();
+
+        braindumpStore.loggedIn = true;
       }
       else
       {
@@ -112,6 +115,11 @@ function onLoginFailed(): void
   totp.value = '';
 
   new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
+}
+
+function onClickWorkOffline(): void
+{
+  braindumpStore.workingOffline = true;
 }
 
 </script>
@@ -268,18 +276,28 @@ function onLoginFailed(): void
               </a>
             </p>
 
-<!--            -->
-<!--            <p>-->
-<!--              <a class="font-bold"-->
-<!--                 href="auth-forgot-password.html">-->
-<!--                Forgot password?-->
-<!--              </a>-->
-<!--            </p>-->
-<!--            -->
+            <!--            -->
+            <!--            <p>-->
+            <!--              <a class="font-bold"-->
+            <!--                 href="auth-forgot-password.html">-->
+            <!--                Forgot password?-->
+            <!--              </a>-->
+            <!--            </p>-->
+            <!--            -->
 
           </div>
 
           <ThemeSwitcher />
+
+          <br />
+          <br />
+          <br />
+
+          <a href="javascript:void(0);"
+             @click="onClickWorkOffline"
+             class="font-bold signup-link work-offline-link">
+            Work offline
+          </a>
 
         </div>
       </div>
@@ -358,6 +376,18 @@ html[data-bs-theme=dark] #auth-right {
 .signup-link {
   word-break: keep-all;
   white-space: preserve nowrap;
+}
+
+.work-offline-link {
+  display: flex;
+  font-size: 0.92rem;
+  font-weight: normal;
+  justify-content: center;
+  color: rgba(128, 128, 128, 0.5);
+}
+
+.work-offline-link:hover {
+  color: rgba(168, 168, 168, 0.5);
 }
 
 </style>

@@ -8,6 +8,7 @@ import Braindump from "@/components/Braindump.vue";
 import {onMounted, ref} from "vue";
 import {TypeNamesDTO, LocalStorageKeys, EndpointURLs, Constants} from "@/constants.ts";
 import {getUnixTimestamp, logout} from "@/util.ts";
+import {braindumpStore} from "@/braindump.ts";
 
 let lastAuthTokenRefreshUTC: number = 0;
 let showLoginPage = ref(true);
@@ -101,7 +102,7 @@ function refreshAuthToken()
 {
   const loginRequired: boolean = isLoginRequired();
 
-  if (!loginRequired)
+  if (!loginRequired || braindumpStore.workingOffline)
   {
     return;
   }
@@ -160,6 +161,8 @@ function refreshAuthToken()
             localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
 
             showLoginPage.value = false;
+
+            braindumpStore.loggedIn = true;
           }
         });
       }
@@ -170,7 +173,7 @@ function refreshAuthToken()
 
 <template>
 
-  <Login v-if="showLoginPage" />
+  <Login v-if="showLoginPage && !braindumpStore.workingOffline" />
 
   <Braindump v-else />
 

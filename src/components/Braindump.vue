@@ -37,6 +37,13 @@ function refresh()
 
   refreshing = true;
 
+  // TODO: load offline dumps here
+
+  if (braindumpStore.workingOffline)
+  {
+    return;
+  }
+
   fetch
   (
       `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?nameFilter=${Constants.BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME}`,
@@ -217,8 +224,9 @@ function onSelectedMenuItem(itemIndex: number)
             Menu
           </li>
 
-          <li :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''}`"
-              @click="onSelectedMenuItem(0)">
+          <li v-if="braindumpStore.loggedIn"
+              @click="onSelectedMenuItem(0)"
+              :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''}`">
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-person-circle"></i>
@@ -240,12 +248,12 @@ function onSelectedMenuItem(itemIndex: number)
           </li>
 
           <li class="sidebar-item"
-              @click="logout();">
+              @click="braindumpStore.workingOffline = false; logout(!braindumpStore.workingOffline);">
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-lock-fill"></i>
               <span>
-                Logout
+                {{ braindumpStore.loggedIn ? 'Logout' : 'Exit' }}
               </span>
             </a>
           </li>

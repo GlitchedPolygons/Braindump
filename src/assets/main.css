@@ -24,6 +24,11 @@ input[readonly] {
     user-select: none !important;
 }
 
+input::placeholder,
+textarea::placeholder{
+    opacity: 0.5 !important;
+}
+
 button:disabled,
 button[disabled],
 button[disabled=disabled] {
