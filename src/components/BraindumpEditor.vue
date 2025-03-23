@@ -161,7 +161,7 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
               {
                 case 400:
                 {
-                  const errorMsg: string = `Upload failed!\n\nErrors:\n\${JSON.stringify((await response.json()).errors, null, 2)}`;
+                  const errorMsg: string = `Upload failed!\n\nErrors:\n${JSON.stringify((await response.json()).errors, null, 2)}`;
                   alert(errorMsg);
                   rej(errorMsg);
                   return;
