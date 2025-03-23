@@ -5,7 +5,11 @@ import 'md-editor-v3/lib/style.css';
 import {onMounted, reactive, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
-import {LocalStorageKeys} from "@/constants.ts";
+import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {arrayBufferToHexEncodedString, getUnixTimestamp, logout} from "@/util.ts";
+import bdConfig from "@/assets/config.json";
+
+type ImgUploadCallback = (url: string) => void;
 
 let editing = ref(true);
 
@@ -116,6 +120,95 @@ function onChangedMarkdown(markdown: string): void
   // todo
 }
 
+async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<void>
+{
+  const r = await Promise.all
+  (
+      files.map((file) =>
+      {
+        return new Promise(async (rev, rej) =>
+        {
+          const form = new FormData();
+
+          const sha256 = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer())
+
+          form.append('sha256', arrayBufferToHexEncodedString(sha256));
+          form.append('filename', `${getUnixTimestamp()}-${file.name}`);
+          form.append('filesizebytes', file.size.toString());
+          form.append('notes', edited.value.Notes);
+          form.append('private', 'false');
+          form.append('file', file);
+
+          const requestContext = {
+            method: 'POST',
+            body: form,
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+            },
+          };
+
+          try
+          {
+            const response = await fetch
+            (
+                `${bdConfig.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}`,
+                requestContext
+            );
+
+            if (!response.ok)
+            {
+              switch (response.status)
+              {
+                case 400:
+                {
+                  const errorMsg: string = `Upload failed!\n\nErrors:\n\${JSON.stringify((await response.json()).errors, null, 2)}`;
+                  alert(errorMsg);
+                  rej(errorMsg);
+                  return;
+                }
+                case 401:
+                case 403:
+                {
+                  logout();
+                  return;
+                }
+                case 413:
+                {
+                  const errorMsg: string = 'Insufficient user quota! Please upload a smaller file or free some space on the remote file storage.';
+                  alert(errorMsg);
+                  rej(errorMsg);
+                  return;
+                }
+                default:
+                {
+                  const errorMsg: string = 'Upload failed! Please upload the file on a different remote file storage and use a link instead. If this error persists, please inform the domain owner about this.';
+                  alert(errorMsg);
+                  rej(errorMsg);
+                  return;
+                }
+              }
+            }
+
+            const responseBodyEnvelope = await response.json();
+
+            if (responseBodyEnvelope.Type !== TypeNamesDTO.USER_FILE_UPLOAD_RESPONSE_DTO || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length !== 1)
+            {
+              rej(response);
+            }
+
+            rev(responseBodyEnvelope.Items[0]);
+          }
+          catch (e)
+          {
+            rej(e);
+          }
+        });
+      })
+  );
+
+  callback(r.map((item) => `${bdConfig.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}/${item?.Guid}`));
+}
+
 function onClickCancel(): void
 {
   // todo
@@ -123,6 +216,16 @@ function onClickCancel(): void
 
 async function onClickSaveBraindump(): Promise<void>
 {
+  if (!edited.value.Name)
+  {
+    alert('Please enter a name for your braindump.');
+  }
+
+  if (edited.value.Notes === null)
+  {
+    edited.value.Notes = '';
+  }
+
   // todo
 }
 
@@ -188,7 +291,8 @@ async function onClickSaveBraindump(): Promise<void>
                        placeholder="Give your braindump a descriptive title">
               </div>
 
-              <div class="form-group my-2">
+              <div class="form-group my-2"
+                   style="margin-bottom: 0.85rem !important;">
 
                 <label for="password"
                        class="form-label">
@@ -208,14 +312,17 @@ async function onClickSaveBraindump(): Promise<void>
                        :style="`margin-left: 2px; ${edited.Notes.length < 900 ? '' : edited.Notes.length < 980 ? 'color: orange' : 'color: red'}`">
                   {{ edited.Notes.length }} / 1000
                 </small>
+
               </div>
 
               <MdEditor v-model="md"
-                        noUploadImg
+                        :preview="false"
                         :maxLength="1048576"
                         :language="'en-US'"
                         :toolbars="toolbar"
                         :theme="state.theme"
+                        :noUploadImg="braindumpStore.workingOffline"
+                        @onUploadImg="onUploadImg"
                         @onChange="onChangedMarkdown" />
 
               <div style="margin-top: 32px;"></div>

@@ -29,6 +29,7 @@ export const EndpointURLs = Object.freeze
         CHANGE_EMAIL: '/api/v1/auth/change-email',
         CHANGE_EMAIL_CONFIRM: '/api/v1/auth/change-email/confirm',
         DATA_ENTRIES: '/api/v1/data',
+        FILE_ENTRIES: '/api/v1/files',
         CHECK_NAME_AVAILABILITY: '/api/v1/data/name/check-availability',
     }
 );
@@ -39,6 +40,7 @@ export const TypeNamesDTO = Object.freeze
         LOGIN_RESPONSE_DTO: 'LoginResponseDto',
         USER_RESPONSE_DTO: 'UserResponseDto',
         USER_DATA_REDUX_RESPONSE_DTO: 'UserDataReduxResponseDto',
+        USER_FILE_UPLOAD_RESPONSE_DTO: 'UserFileUploadResponseDto',
         USER_ENABLE_2FA_RESPONSE_DTO: 'UserEnableTwoFactorAuthResponseDto',
         USER_DISABLE_2FA_RESPONSE_DTO: 'UserDisableTwoFactorAuthResponseDto',
 
