@@ -6,7 +6,7 @@ import {onMounted, reactive, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, getUnixTimestamp, logout} from "@/util.ts";
+import {arrayBufferToHexEncodedString, exportBraindump, getUnixTimestamp, logout} from "@/util.ts";
 import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 
@@ -261,7 +261,7 @@ function onClickCancel(): void
 
 async function onClickExport(): Promise<void>
 {
-  // todo
+  exportBraindump(edited.value.Guid);
 }
 
 async function onClickDelete(): Promise<void>

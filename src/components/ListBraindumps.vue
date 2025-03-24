@@ -5,7 +5,13 @@ import {nextTick, onMounted, ref} from "vue";
 import {AES, aesKeyStore} from "@/aes.ts";
 import config from "@/assets/config.json";
 import {Braindump, braindumpStore} from "@/braindump.ts";
-import {getDateFromUnixTimestamp, getDateString, getDateTimeString, getUnixTimestamp} from "../util.ts";
+import {
+  exportBraindump,
+  getDateFromUnixTimestamp,
+  getDateString,
+  getDateTimeString,
+  getUnixTimestamp
+} from "../util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
 const aes: AES = new AES();
@@ -60,6 +66,8 @@ async function refreshList(): Promise<void>
     return;
   }
 
+  const searchEnabled: boolean = !!search.value && search.value.length !== 0;
+
   braindumpStore.braindumps = [];
 
   for (let dump of responseBodyEnvelope.Items)
@@ -76,16 +84,33 @@ async function refreshList(): Promise<void>
       dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
     }
 
-    if (dump.Name)
+    if
+    (
+        dump.Name
+        &&
+        (
+            !searchEnabled
+            ||
+            (
+                dump.Name.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+                ||
+                dump.Notes.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+            )
+        )
+    )
     {
       braindumpStore.braindumps.push(dump);
     }
   }
 }
 
-async function onClickExport(clickEvent: Event, dump: Braindump): Promise<void>
+function onClickExport(clickEvent: Event, dump: Braindump): void
 {
-  // todo
+  clickEvent.stopImmediatePropagation();
+  clickEvent.stopPropagation();
+  clickEvent.preventDefault();
+
+  exportBraindump(dump.Guid);
 }
 
 async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<void>
@@ -121,6 +146,11 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
 
 function onClickClearSearch(): void
 {
+  if (search.value === '')
+  {
+    return;
+  }
+
   search.value = '';
 
   onChangedSearchTerm();
@@ -209,14 +239,16 @@ function onClickClearSearch(): void
               </span>
             </span>
 
-            <div style="flex-grow: 9"></div>
+            <div style="flex-grow: 9;"></div>
 
             <button type="button"
+                    @click="onClickExport($event, dump)"
                     class="btn btn-secondary">
               <i class="bi bi-box-arrow-up-right"></i>
             </button>
 
-            <button class="btn btn-danger"
+            <button type="button"
+                    class="btn btn-danger"
                     @click="onClickDeleteDump($event, dump)">
               <i class="bi bi-trash"></i>
             </button>

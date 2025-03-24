@@ -104,3 +104,10 @@ export function isPasswordShitty(password: string): boolean
 
     return false;
 }
+
+export function exportBraindump(guid: string)
+{
+    console.log(`Exporting Braindump ${guid}`);
+
+    // todo: impl
+}
