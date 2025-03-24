@@ -4,7 +4,7 @@
 import {onMounted, ref} from "vue";
 import {AES, aesKeyStore} from "@/aes.ts";
 import config from "@/assets/config.json";
-import {braindumpStore} from "@/braindump.ts";
+import {Braindump, braindumpStore} from "@/braindump.ts";
 import {getDateFromUnixTimestamp, getDateString, getDateTimeString} from "../util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
@@ -14,11 +14,22 @@ let search = ref('');
 
 defineEmits(['onSelectBraindump']);
 
-onMounted(async () =>
+onMounted(refreshList);
+
+function onChangedSearchTerm(changeEvent: Event)
+{
+  const element = changeEvent.target as HTMLInputElement;
+
+  const newSearchTerm: string = element?.value;
+
+  console.log(newSearchTerm);
+}
+
+async function refreshList(): Promise<void>
 {
   const response = await fetch
   (
-      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646`,
+      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortBy=creationTimestampUTC&sortingOrder=descending`,
       {
         method: 'GET',
         headers: {
@@ -52,20 +63,52 @@ onMounted(async () =>
 
     dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
 
+    if (dump.Notes && dump.Notes.length !== 0)
+    {
+      dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
+    }
+
     if (dump.Name)
     {
       braindumpStore.braindumps.push(dump);
     }
   }
-});
+}
 
-function onChangedSearchTerm(changeEvent: Event)
+async function onClickExport(clickEvent: Event, dump: Braindump): Promise<void>
 {
-  const element = changeEvent.target as HTMLInputElement;
+  // todo
+}
 
-  const newSearchTerm: string = element?.value;
+async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<void>
+{
+  clickEvent.stopImmediatePropagation();
+  clickEvent.stopPropagation();
+  clickEvent.preventDefault();
 
-  console.log(newSearchTerm);
+  if (!confirm(`Are you sure that you want to delete Braindump "${dump.Name}"?`))
+  {
+    return;
+  }
+
+  const response = await fetch
+  (
+      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}/${dump.Guid}`,
+      {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+        },
+      }
+  );
+
+  if (!response.ok)
+  {
+    alert(`Deletion failed. Error: ${response.status} (${response.statusText})`);
+    return;
+  }
+
+  await refreshList();
 }
 
 </script>
@@ -123,15 +166,34 @@ function onChangedSearchTerm(changeEvent: Event)
       <div class="col-lg-8">
 
         <div class="card"
+             :title="`Created on: ${getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC))}`"
              v-for="dump in braindumpStore.braindumps">
 
           <div class="card-body braindump-list-entry"
                @click="$emit('onSelectBraindump', dump)">
 
             <span>
-              {{ dump.Name }}
-            , created on: {{ getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC)) }}
+              {{
+                dump.Name
+              }}<br v-if="dump.Notes" />
+              <span class="braindump-notes">
+              {{
+                  dump.Notes ? `\n\n${dump.Notes}` : ''
+                }}
+              </span>
             </span>
+
+
+            <div style="flex-grow: 9"></div>
+
+            <button class="btn btn-secondary">
+              <i class="bi bi-box-arrow-up-right"></i>
+            </button>
+
+            <button class="btn btn-danger"
+                    @click="onClickDeleteDump($event, dump)">
+              <i class="bi bi-trash"></i>
+            </button>
 
           </div>
 
@@ -153,6 +215,12 @@ function onChangedSearchTerm(changeEvent: Event)
   justify-content: center;
 }
 
+.braindump-list-entry {
+  gap: 8px;
+  display: flex;
+  align-items: center;
+}
+
 .braindump-list-entry:hover {
   cursor: pointer;
 }
@@ -161,12 +229,21 @@ function onChangedSearchTerm(changeEvent: Event)
   color: white;
 }
 
+.braindump-notes {
+  font-size: 0.88rem;
+  color: rgba(130, 150, 152, 0.64);
+}
+
 .card:hover {
   filter: brightness(125%);
 }
 
 .card:active {
   filter: brightness(100%);
+}
+
+#search {
+  max-width: 512px;
 }
 
 </style>
