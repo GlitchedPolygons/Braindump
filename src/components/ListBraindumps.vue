@@ -186,7 +186,8 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
 
             <div style="flex-grow: 9"></div>
 
-            <button class="btn btn-secondary">
+            <button type="button"
+                    class="btn btn-secondary">
               <i class="bi bi-box-arrow-up-right"></i>
             </button>
 

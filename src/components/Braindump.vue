@@ -401,7 +401,8 @@ async function openBraindump(dump: Braindump): Promise<void>
       <Tools v-if="selectedMenuItem === 1" />
 
       <BraindumpEditor ref="braindumpEditorRef"
-                       v-if="selectedMenuItem === 2" />
+                       v-if="selectedMenuItem === 2"
+                       @onDeleteOpenDump="braindumpStore.editedBraindump = Constants.DEFAULT_BRAINDUMP; onSelectedMenuItem(3);" />
 
       <ListBraindumps v-if="selectedMenuItem === 3"
                       @onSelectBraindump="openBraindump" />

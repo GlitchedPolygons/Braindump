@@ -74,6 +74,8 @@ const toolbar = [
 
 defineExpose({onCreateNewBraindump});
 
+const emit = defineEmits(['onDeleteOpenDump']);
+
 config({
   editorConfig: {
     renderDelay: 64
@@ -255,6 +257,43 @@ function onClickCancel(): void
   }
 
   editing.value = false;
+}
+
+async function onClickExport(): Promise<void>
+{
+  // todo
+}
+
+async function onClickDelete(): Promise<void>
+{
+  if (!edited.value)
+  {
+    return;
+  }
+
+  if (!confirm(`Are you sure that you want to delete Braindump "${edited.value.Name}"?`))
+  {
+    return;
+  }
+
+  const response = await fetch
+  (
+      `${bdConfig.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}/${edited.value.Guid}`,
+      {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+        },
+      }
+  );
+
+  if (!response.ok)
+  {
+    alert(`Deletion failed. Error: ${response.status} (${response.statusText})`);
+    return;
+  }
+
+  emit('onDeleteOpenDump');
 }
 
 async function onClickSaveBraindump(): Promise<void>
@@ -542,12 +581,29 @@ async function onClickSaveBraindump(): Promise<void>
 
     <br />
 
-    <button type="button"
-            @click="onClickEdit"
-            class="btn btn-primary bdmp-button edit-button">
-      <i class="bi bi-pencil"></i>
-      Edit
-    </button>
+    <div class="edit-buttons">
+
+      <button type="button"
+              @click="onClickEdit"
+              class="btn btn-primary bdmp-button edit-button">
+        <i class="bi bi-pencil"></i>
+        Edit
+      </button>
+
+      <button type="button"
+              @click="onClickExport"
+              class="btn btn-secondary bdmp-button edit-button">
+        <i class="bi bi-box-arrow-up-right"></i>
+        Export
+      </button>
+
+      <button type="button"
+              @click="onClickDelete"
+              class="btn btn-danger bdmp-button edit-button">
+        <i class="bi bi-trash"></i>
+        Delete
+      </button>
+    </div>
 
     <MdPreview :id="'md-preview'"
                :class="'md-noedit'"
@@ -612,8 +668,15 @@ async function onClickSaveBraindump(): Promise<void>
   max-height: 420px;
 }
 
-.edit-button {
+.edit-buttons {
+  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   margin-bottom: 32px;
+}
+
+.edit-button {
 }
 
 .edit-button > i {
@@ -623,6 +686,12 @@ async function onClickSaveBraindump(): Promise<void>
 
 .md-noedit {
   background-color: transparent !important;
+}
+
+@media (max-width: 450px) {
+  .edit-button {
+    width: 100%;
+  }
 }
 
 </style>
