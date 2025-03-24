@@ -321,6 +321,16 @@ async function onClickSaveBraindump(): Promise<void>
     markdownEncryptionTask = aes.encryptString(edited.value.Data, aesKeyStore.aesKey);
   }
 
+  if (!notesEncryptionTask)
+  {
+    notesEncryptionTask = aes.encryptString(edited.value.Notes, aesKeyStore.aesKey);
+  }
+
+  if (!nameEncryptionTask)
+  {
+    nameEncryptionTask = aes.encryptString(edited.value.Name, aesKeyStore.aesKey);
+  }
+
   if (busy.value === true)
   {
     return;
