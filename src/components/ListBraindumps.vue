@@ -1,28 +1,36 @@
 <script setup
         lang="ts">
 
-import {onMounted, ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import {AES, aesKeyStore} from "@/aes.ts";
 import config from "@/assets/config.json";
 import {Braindump, braindumpStore} from "@/braindump.ts";
-import {getDateFromUnixTimestamp, getDateString, getDateTimeString} from "../util.ts";
+import {getDateFromUnixTimestamp, getDateString, getDateTimeString, getUnixTimestamp} from "../util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
 const aes: AES = new AES();
 
 let search = ref('');
 
+let refreshListDebounce: number | null = null
+
 defineEmits(['onSelectBraindump']);
 
 onMounted(refreshList);
 
-function onChangedSearchTerm(changeEvent: Event)
+function onChangedSearchTerm()
 {
-  const element = changeEvent.target as HTMLInputElement;
+  if (refreshListDebounce !== null)
+  {
+    clearTimeout(refreshListDebounce);
+  }
 
-  const newSearchTerm: string = element?.value;
-
-  console.log(newSearchTerm);
+  refreshListDebounce = window.setTimeout(() =>
+  {
+    console.log('refreshing...');
+    refreshList();
+    refreshListDebounce = null;
+  }, 512);
 }
 
 async function refreshList(): Promise<void>
@@ -111,6 +119,13 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
   await refreshList();
 }
 
+function onClickClearSearch(): void
+{
+  search.value = '';
+
+  onChangedSearchTerm();
+}
+
 </script>
 
 <template>
@@ -143,22 +158,33 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
           Search
         </label>
 
-        <input type="text"
-               id="search"
-               name="search"
-               placeholder=""
-               class="form-control"
-               v-model="search"
-               @input="onChangedSearchTerm">
+        <div class="input-group">
+
+          <input type="text"
+                 id="search"
+                 name="search"
+                 placeholder=""
+                 class="form-control"
+                 v-model="search"
+                 @input="onChangedSearchTerm">
+
+          <button type="button"
+                  class="btn btn-danger"
+                  @click="onClickClearSearch">
+            Clear
+          </button>
+
+        </div>
+
       </div>
+
 
     </div>
 
   </div>
 
-  <br />
-
-  <section class="section">
+  <section style="margin-top: 1.6rem;"
+           class="section">
 
     <div class="row"
          style="justify-content: center;">
@@ -182,7 +208,6 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
                 }}
               </span>
             </span>
-
 
             <div style="flex-grow: 9"></div>
 

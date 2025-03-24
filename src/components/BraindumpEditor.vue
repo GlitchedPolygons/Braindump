@@ -589,7 +589,7 @@ async function onClickSaveBraindump(): Promise<void>
       {{ edited.Notes }}
     </p>
 
-    <br />
+    <div style="margin-bottom: 32px;"></div>
 
     <div class="edit-buttons">
 
