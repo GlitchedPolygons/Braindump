@@ -11,8 +11,8 @@ export class Braindump {
 };
 
 export const braindumpStore = reactive({
-    braindumps: [],
     editedBraindump: new Braindump(),
+    braindumps: [],
     loggedIn: false,
     workingOffline: false,
 });

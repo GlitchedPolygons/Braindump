@@ -5,7 +5,7 @@ import 'md-editor-v3/lib/style.css';
 import {onMounted, reactive, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
-import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {arrayBufferToHexEncodedString, getUnixTimestamp, logout} from "@/util.ts";
 import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
@@ -14,15 +14,7 @@ type ImgUploadCallback = (url: string) => void;
 
 let editing = ref(true);
 
-let edited = ref({
-  Guid: '',
-  CreationTimestampUTC: 0,
-  LastModificationTimestampUTC: 0,
-  Notes: '',
-  Name: '',
-  Data: '',
-  Private: true,
-});
+let edited = ref(Constants.DEFAULT_BRAINDUMP);
 
 let nameEncryptionTask: Promise<string>;
 let notesEncryptionTask: Promise<string>;
@@ -79,6 +71,8 @@ const toolbar = [
   'preview',
   'previewOnly',
 ];
+
+defineExpose({onCreateNewBraindump});
 
 config({
   editorConfig: {
@@ -239,6 +233,20 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
   callback(r.map((item) => `${bdConfig.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}/${item?.Guid}`));
 }
 
+function onCreateNewBraindump(): void
+{
+  braindumpStore.editedBraindump = Constants.DEFAULT_BRAINDUMP;
+
+  edited.value = Constants.DEFAULT_BRAINDUMP;
+
+  onClickEdit();
+}
+
+function onClickEdit(): void
+{
+  editing.value = true;
+}
+
 function onClickCancel(): void
 {
   if (braindumpStore.editedBraindump)
@@ -305,8 +313,20 @@ async function onClickSaveBraindump(): Promise<void>
   }
   */
 
+  const isNew: boolean = !edited.value.Guid;
+
+  const url: string =
+      isNew
+          ? `${bdConfig.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}`
+          : `${bdConfig.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}/${edited.value.Guid}`;
+
+  const method: string =
+      isNew
+          ? 'POST'
+          : 'PUT';
+
   const saveRequestContext = {
-    method: 'POST',
+    method: method,
     body: JSON.stringify({
       Private: true,
       Name: encryptedName,
@@ -321,7 +341,7 @@ async function onClickSaveBraindump(): Promise<void>
 
   const response = await fetch
   (
-      `${bdConfig.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}`,
+      url,
       saveRequestContext
   );
 
@@ -469,6 +489,7 @@ async function onClickSaveBraindump(): Promise<void>
               </div>
 
               <MdEditor v-model="edited.Data"
+                        :id="'md-editor'"
                         :preview="false"
                         :maxLength="1048576"
                         :language="'en-US'"
@@ -478,25 +499,22 @@ async function onClickSaveBraindump(): Promise<void>
                         @onUploadImg="onUploadImg"
                         @onChange="onChangedMarkdown" />
 
-              <div style="margin-top: 32px;"></div>
+              <div class="bottom-spacer"></div>
 
-              <div class="form-group my-2 d-flex justify-content-end"
-                   style="gap: 24px;">
+              <div class="form-group my-2 d-flex justify-content-end action-buttons">
 
                 <button type="button"
                         :disabled="busy"
                         @click="onClickCancel"
-                        style="min-width: 128px;"
                         v-if="edited.Guid"
-                        class="btn btn-secondary bdmp-button">
+                        class="btn btn-secondary bdmp-button cancel-button">
                   Cancel
                 </button>
 
                 <button type="button"
                         :disabled="busy"
-                        style="min-width: 128px;"
                         @click="onClickSaveBraindump"
-                        class="btn btn-primary bdmp-button">
+                        class="btn btn-primary bdmp-button save-button">
                   {{ edited.Guid ? 'Save' : 'Create' }}
                 </button>
 
@@ -517,7 +535,22 @@ async function onClickSaveBraindump(): Promise<void>
 
   <div v-else>
 
+    <h1>
+      {{ edited.Name }}
+    </h1>
+
+    <br />
+
+    <button type="button"
+            @click="onClickEdit"
+            class="btn btn-primary bdmp-button edit-button">
+      <i class="bi bi-pencil"></i>
+      Edit
+    </button>
+
     <MdPreview :id="'md-preview'"
+               :class="'md-noedit'"
+               :theme="state.theme"
                :model-value="edited?.Data" />
 
   </div>
@@ -530,15 +563,65 @@ async function onClickSaveBraindump(): Promise<void>
   justify-content: center;
 }
 
+.save-button,
+.cancel-button {
+  min-width: 128px;
+}
+
+.bottom-spacer {
+  margin-top: 32px;
+}
+
+.action-buttons {
+  gap: 24px;
+}
+
 @media (max-width: 420px) {
   input, textarea, label {
     font-size: 0.89rem !important;
+  }
+
+  .col-12 {
+    padding: 0;
+  }
+
+  .action-buttons {
+    gap: 16px;
+  }
+
+  .card-body, .card-header {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .save-button,
+  .cancel-button {
+    min-width: 0;
+    width: 100% !important;
+  }
+
+  .bottom-spacer {
+    margin-top: 16px;
   }
 }
 
 #notes {
   min-height: 61px;
   max-height: 420px;
+}
+
+.edit-button {
+  margin-bottom: 32px;
+}
+
+.edit-button > i {
+  margin-left: -4px;
+  margin-right: 6px;
+}
+
+.md-noedit {
+  background-color: transparent !important;
 }
 
 </style>

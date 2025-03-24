@@ -25,7 +25,7 @@ input[readonly] {
 }
 
 input::placeholder,
-textarea::placeholder{
+textarea::placeholder {
     opacity: 0.5 !important;
 }
 
@@ -55,4 +55,10 @@ svg.md-editor-icon {
 
 .md-editor-preview .md-editor-code .md-editor-code-head .md-editor-code-flag {
     opacity: 0;
+}
+
+@media (max-width: 420px) {
+    html[data-bs-theme="dark"] #main {
+        padding: 1.2rem;
+    }
 }

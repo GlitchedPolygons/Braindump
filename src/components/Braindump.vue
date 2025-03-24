@@ -1,7 +1,7 @@
 <script setup
         lang="ts">
 
-import {onMounted, ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
@@ -18,6 +18,7 @@ import ListBraindumps from "@/components/ListBraindumps.vue";
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
 
+let braindumpEditorRef = ref(null);
 let selectedMenuItem = ref(-1);
 let refreshing: boolean = false;
 let ready = ref(false);
@@ -176,6 +177,15 @@ function onSelectedMenuItem(itemIndex: number)
   selectedMenuItem.value = itemIndex;
 }
 
+async function onClickCreateNewBraindump(): Promise<void>
+{
+  onSelectedMenuItem(2);
+
+  await nextTick();
+
+  braindumpEditorRef.value?.onCreateNewBraindump();
+}
+
 async function openBraindump(dump: Braindump): Promise<void>
 {
   const response: Response = await fetch
@@ -283,7 +293,7 @@ async function openBraindump(dump: Braindump): Promise<void>
           <li class="sidebar-item">
 
             <button class="btn btn-success create-dump-button"
-                    @click="braindumpStore.editedBraindump = null; onSelectedMenuItem(2)">
+                    @click="onClickCreateNewBraindump">
               + Create new dump
             </button>
 
@@ -390,7 +400,8 @@ async function openBraindump(dump: Braindump): Promise<void>
 
       <Tools v-if="selectedMenuItem === 1" />
 
-      <BraindumpEditor v-if="selectedMenuItem === 2" />
+      <BraindumpEditor ref="braindumpEditorRef"
+                       v-if="selectedMenuItem === 2" />
 
       <ListBraindumps v-if="selectedMenuItem === 3"
                       @onSelectBraindump="openBraindump" />

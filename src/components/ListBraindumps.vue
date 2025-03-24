@@ -61,18 +61,69 @@ onMounted(async () =>
 
 <template>
 
-  <div v-for="dump in braindumpStore.braindumps">
+<!--
+  <div class="page-title">
+    <div class="row">
+      <div class="col-lg-8 order-md-1 order-last">
+        <h3>
+          Braindumps
+        </h3>
 
-    <a href="javascript:void(0);"
-       @click="$emit('onSelectBraindump', dump)">
-      {{ dump.Name }}
-      (created on: {{ getDateFromUnixTimestamp(dump.CreationTimestampUTC).toISOString() }})
-    </a>
-
+        <p class="text-subtitle text-muted">
+          Here's a list of all of your braindumps...
+        </p>
+      </div>
+    </div>
   </div>
+-->
+  
+  <section class="section">
+
+    <div class="row"
+         style="justify-content: center;">
+
+      <div class="col-lg-8">
+
+        <div class="card">
+
+          <!--
+                    <div class="card-header">
+
+                      <h5 class="card-title">
+                        Braindumps
+                      </h5>
+
+                    </div>
+          -->
+          <div class="card-body">
+
+            <div v-for="dump in braindumpStore.braindumps">
+
+              <a href="javascript:void(0);"
+                 @click="$emit('onSelectBraindump', dump)">
+                {{ dump.Name }}
+                (created on: {{ getDateFromUnixTimestamp(dump.CreationTimestampUTC).toISOString() }})
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </section>
+
 
 </template>
 
 <style scoped>
+
+.row {
+  justify-content: center;
+}
 
 </style>
