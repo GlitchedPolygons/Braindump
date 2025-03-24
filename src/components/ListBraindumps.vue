@@ -29,7 +29,7 @@ async function refreshList(): Promise<void>
 {
   const response = await fetch
   (
-      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortBy=creationTimestampUTC&sortingOrder=descending`,
+      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortBy=lastModificationTimestampUTC&sortingOrder=descending`,
       {
         method: 'GET',
         headers: {
