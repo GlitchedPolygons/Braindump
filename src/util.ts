@@ -24,7 +24,13 @@ export function getDateString(date: Date): string
 
 export function getDateTimeString(date: Date): string
 {
-    return `${date.getDate()}. ${Constants.MONTHS[date.getMonth()]} ${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()} (UTC)`;
+    const year: number = date.getFullYear();
+    const monthIndex: number = date.getMonth();
+    const day: number = date.getDate();
+    const minutes: number = date.getMinutes();
+    const hours: number = date.getHours();
+
+    return `${day}. ${Constants.MONTHS[monthIndex]} ${year}, ${hours}:${minutes < 10 ? `0${minutes}` : minutes} (UTC)`;
 }
 
 export function logout(reload: boolean = true): void

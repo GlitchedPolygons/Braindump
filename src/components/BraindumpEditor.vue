@@ -456,6 +456,7 @@ async function onClickSaveBraindump(): Promise<void>
                 <input type="text"
                        id="name"
                        name="name"
+                       maxlength="250"
                        class="form-control"
                        v-model="edited.Name"
                        @input="onChangedName"
@@ -475,15 +476,15 @@ async function onClickSaveBraindump(): Promise<void>
                           name="notes"
                           id="notes"
                           rows="5"
-                          maxlength="1000"
+                          maxlength="500"
                           class="form-control"
                           v-model="edited.Notes"
                           @input="onChangedNotes"
                           placeholder="Enter an optional description of what this braindump is about."></textarea>
 
                 <small class="unselectable"
-                       :style="`margin-left: 2px; ${edited.Notes.length < 900 ? '' : edited.Notes.length < 980 ? 'color: orange' : 'color: red'}`">
-                  {{ edited.Notes.length }} / 1000
+                       :style="`margin-left: 2px; ${edited.Notes.length < 420 ? '' : edited.Notes.length < 480 ? 'color: orange' : 'color: red'}`">
+                  {{ edited.Notes.length }} / 500
                 </small>
 
               </div>

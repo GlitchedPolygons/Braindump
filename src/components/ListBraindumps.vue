@@ -166,7 +166,7 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
       <div class="col-lg-8">
 
         <div class="card"
-             :title="`Created on: ${getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC))}`"
+             :title="`Created on: ${getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC))}\n\nLast modified on: ${getDateTimeString(getDateFromUnixTimestamp(dump.LastModificationTimestampUTC))}`"
              v-for="dump in braindumpStore.braindumps">
 
           <div class="card-body braindump-list-entry"
