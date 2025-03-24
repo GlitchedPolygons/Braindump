@@ -313,7 +313,12 @@ async function onClickSaveBraindump(): Promise<void>
   if (!edited.value.Data)
   {
     edited.value.Data = '';
-    markdownEncryptionTask = aes.encryptString('', aesKeyStore.aesKey);
+    onChangedMarkdown('');
+  }
+
+  if (!markdownEncryptionTask)
+  {
+    markdownEncryptionTask = aes.encryptString(edited.value.Data, aesKeyStore.aesKey);
   }
 
   if (busy.value === true)
@@ -579,6 +584,11 @@ async function onClickSaveBraindump(): Promise<void>
       {{ edited.Name }}
     </h1>
 
+    <p class="dump-notes"
+       v-if="edited.Notes">
+      {{ edited.Notes }}
+    </p>
+
     <br />
 
     <div class="edit-buttons">
@@ -692,6 +702,10 @@ async function onClickSaveBraindump(): Promise<void>
   .edit-button {
     width: 100%;
   }
+}
+
+.dump-notes {
+  opacity: 69.420%;
 }
 
 </style>
