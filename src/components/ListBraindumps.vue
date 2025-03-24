@@ -1,14 +1,16 @@
 <script setup
         lang="ts">
 
-import {onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import {AES, aesKeyStore} from "@/aes.ts";
 import config from "@/assets/config.json";
 import {braindumpStore} from "@/braindump.ts";
-import {getDateFromUnixTimestamp} from "../util.ts";
+import {getDateFromUnixTimestamp, getDateString, getDateTimeString} from "../util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
 const aes: AES = new AES();
+
+let search = ref('');
 
 defineEmits(['onSelectBraindump']);
 
@@ -57,26 +59,62 @@ onMounted(async () =>
   }
 });
 
+function onChangedSearchTerm(changeEvent: Event)
+{
+  const element = changeEvent.target as HTMLInputElement;
+
+  const newSearchTerm: string = element?.value;
+
+  console.log(newSearchTerm);
+}
+
 </script>
 
 <template>
 
-<!--
-  <div class="page-title">
-    <div class="row">
-      <div class="col-lg-8 order-md-1 order-last">
-        <h3>
-          Braindumps
-        </h3>
+  <!--
+    <div class="page-title">
+      <div class="row">
+        <div class="col-lg-8 order-md-1 order-last">
+          <h3>
+            Braindumps
+          </h3>
 
-        <p class="text-subtitle text-muted">
-          Here's a list of all of your braindumps...
-        </p>
+          <p class="text-subtitle text-muted">
+            Here's a list of all of your braindumps...
+          </p>
+        </div>
       </div>
     </div>
+  -->
+
+
+  <div class="row">
+
+    <div class="col-lg-8">
+
+      <div class="form-group my-2">
+
+        <label for="search"
+               class="form-label">
+          Search
+        </label>
+
+        <input type="text"
+               id="search"
+               name="search"
+               placeholder=""
+               class="form-control"
+               v-model="search"
+               @input="onChangedSearchTerm">
+      </div>
+
+    </div>
+
   </div>
--->
-  
+
+  <br />
+
   <section class="section">
 
     <div class="row"
@@ -84,28 +122,17 @@ onMounted(async () =>
 
       <div class="col-lg-8">
 
-        <div class="card">
+        <div class="card"
+             v-for="dump in braindumpStore.braindumps">
 
-          <!--
-                    <div class="card-header">
+          <div class="card-body braindump-list-entry"
+               @click="$emit('onSelectBraindump', dump)">
 
-                      <h5 class="card-title">
-                        Braindumps
-                      </h5>
+            <span>
+              {{ dump.Name }}
+            , created on: {{ getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC)) }}
+            </span>
 
-                    </div>
-          -->
-          <div class="card-body">
-
-            <div v-for="dump in braindumpStore.braindumps">
-
-              <a href="javascript:void(0);"
-                 @click="$emit('onSelectBraindump', dump)">
-                {{ dump.Name }}
-                (created on: {{ getDateFromUnixTimestamp(dump.CreationTimestampUTC).toISOString() }})
-              </a>
-
-            </div>
           </div>
 
         </div>
@@ -124,6 +151,22 @@ onMounted(async () =>
 
 .row {
   justify-content: center;
+}
+
+.braindump-list-entry:hover {
+  cursor: pointer;
+}
+
+.braindump-list-entry:hover > span {
+  color: white;
+}
+
+.card:hover {
+  filter: brightness(125%);
+}
+
+.card:active {
+  filter: brightness(100%);
 }
 
 </style>

@@ -64,6 +64,20 @@ export const Constants = Object.freeze
             Name: '',
             Data: '',
             Private: true,
-        }
+        },
+        MONTHS: [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+        ]
     }
 );

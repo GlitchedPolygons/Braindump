@@ -1,4 +1,4 @@
-import {LocalStorageKeys} from "@/constants.ts";
+import {Constants, LocalStorageKeys} from "@/constants.ts";
 
 export function arrayBufferToHexEncodedString(buffer: ArrayBuffer): string
 {
@@ -15,6 +15,16 @@ export function getUnixTimestamp(): number
 export function getDateFromUnixTimestamp(unixTimestamp: number): Date
 {
     return new Date(unixTimestamp * 1000);
+}
+
+export function getDateString(date: Date): string
+{
+    return `${date.getDate()}. ${Constants.MONTHS[date.getMonth()]}, ${date.getFullYear()}`;
+}
+
+export function getDateTimeString(date: Date): string
+{
+    return `${date.getDate()}. ${Constants.MONTHS[date.getMonth()]} ${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()} (UTC)`;
 }
 
 export function logout(reload: boolean = true): void
