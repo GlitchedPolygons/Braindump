@@ -95,3 +95,9 @@ svg.md-editor-icon {
     -moz-animation: thaSpinzM8 666ms linear infinite;
     -webkit-animation: thaSpinzM8 666ms linear infinite;
 }
+
+.task-list-item-checkbox {
+    transform: scale(1.337);
+    margin-left: -1.80rem !important;
+    margin-right: 8px !important;
+}

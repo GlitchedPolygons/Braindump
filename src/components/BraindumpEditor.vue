@@ -2,7 +2,7 @@
         lang="ts">
 
 import 'md-editor-v3/lib/style.css';
-import {onMounted, reactive, ref, toRaw} from "vue";
+import {onMounted, reactive, ref, toRaw, nextTick} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
@@ -114,7 +114,26 @@ onMounted(() =>
   };
 
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
+
+  hookIntoCheckboxInputEvents();
 });
+
+function hookIntoCheckboxInputEvents(): void
+{
+  nextTick().then(() =>
+  {
+    for (const element of document.getElementsByClassName('task-list-item-checkbox'))
+    {
+      element.removeEventListener('click', onClickCheckbox);
+      element.addEventListener('click', onClickCheckbox);
+    }
+  });
+}
+
+function onClickCheckbox(clickEvent: Event): void
+{
+  // TODO: modify and save markdown accordingly
+}
 
 function onChangedName(changeEvent: Event)
 {
@@ -145,6 +164,8 @@ function onChangedNotes(changeEvent: Event)
 function onChangedMarkdown(markdown: string): void
 {
   markdownEncryptionTask = aes.encryptString(markdown, aesKeyStore.aesKey);
+
+  hookIntoCheckboxInputEvents();
 }
 
 async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<void>
