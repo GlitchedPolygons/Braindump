@@ -18,6 +18,8 @@ const aes: AES = new AES();
 
 let search = ref('');
 
+let refreshing = ref(false);
+
 let refreshListDebounce: number | null = null
 
 defineEmits(['onSelectBraindump']);
@@ -41,6 +43,13 @@ function onChangedSearchTerm()
 
 async function refreshList(): Promise<void>
 {
+  if (refreshing.value === true)
+  {
+    return;
+  }
+
+  refreshing.value = true;
+
   const response = await fetch
   (
       `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortBy=lastModificationTimestampUTC&sortingOrder=descending`,
@@ -55,6 +64,7 @@ async function refreshList(): Promise<void>
   if (!response.ok)
   {
     alert('Failed to fetch braindumps from server. Please double-check your connection and try again...');
+    refreshing.value = false;
     return;
   }
 
@@ -63,6 +73,7 @@ async function refreshList(): Promise<void>
   if (!responseBodyEnvelope || responseBodyEnvelope.Type !== TypeNamesDTO.USER_DATA_REDUX_RESPONSE_DTO || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length === 0)
   {
     alert('Failed to fetch braindumps from server. Please double-check your connection and try again...');
+    refreshing.value = false;
     return;
   }
 
@@ -102,6 +113,8 @@ async function refreshList(): Promise<void>
       braindumpStore.braindumps.push(dump);
     }
   }
+
+  refreshing.value = false;
 }
 
 function onClickExport(clickEvent: Event, dump: Braindump): void
@@ -185,7 +198,9 @@ function onClickClearSearch(): void
 
         <label for="search"
                class="form-label">
-          Search
+
+          Search <i v-if="refreshing"
+                    class="bi bi-hourglass pending-search-indicator"></i>
         </label>
 
         <div class="input-group">
@@ -222,8 +237,9 @@ function onClickClearSearch(): void
       <div class="col-lg-8">
 
         <div class="card"
-             :title="`Created on: ${getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC))}\n\nLast modified on: ${getDateTimeString(getDateFromUnixTimestamp(dump.LastModificationTimestampUTC))}`"
-             v-for="dump in braindumpStore.braindumps">
+             v-if="!refreshing"
+             v-for="dump in braindumpStore.braindumps"
+             :title="`Created on: ${getDateTimeString(getDateFromUnixTimestamp(dump.CreationTimestampUTC))}\n\nLast modified on: ${getDateTimeString(getDateFromUnixTimestamp(dump.LastModificationTimestampUTC))}`">
 
           <div class="card-body braindump-list-entry"
                @click="$emit('onSelectBraindump', dump)">

@@ -111,3 +111,15 @@ export function exportBraindump(guid: string)
 
     // todo: impl
 }
+
+export function deepClone<T>(object: T): T
+{
+    if (typeof window.structuredClone !== 'undefined' && typeof window.structuredClone === 'function')
+    {
+        return window.structuredClone(object);
+    }
+
+    console.warn('structuredClone function not available in this environment; reverting to JSON-based deep clone heuristics...');
+
+    return JSON.parse(JSON.stringify(object));
+}

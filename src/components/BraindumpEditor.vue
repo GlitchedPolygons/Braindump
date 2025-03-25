@@ -2,11 +2,11 @@
         lang="ts">
 
 import 'md-editor-v3/lib/style.css';
-import {onMounted, reactive, ref} from "vue";
+import {onMounted, reactive, ref, toRaw} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, exportBraindump, getUnixTimestamp, logout} from "@/util.ts";
+import {arrayBufferToHexEncodedString, deepClone, exportBraindump, getUnixTimestamp, logout} from "@/util.ts";
 import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 
@@ -14,7 +14,7 @@ type ImgUploadCallback = (url: string) => void;
 
 let editing = ref(true);
 
-let edited = ref(Constants.DEFAULT_BRAINDUMP);
+let edited = ref(deepClone(Constants.DEFAULT_BRAINDUMP));
 
 let nameEncryptionTask: Promise<string>;
 let notesEncryptionTask: Promise<string>;
@@ -105,7 +105,7 @@ onMounted(() =>
   {
     editing.value = false;
 
-    edited.value = braindumpStore.editedBraindump;
+    edited.value = deepClone(toRaw(braindumpStore.editedBraindump));
   }
 
   window.onChangedTheme = (theme: string) =>
@@ -237,9 +237,9 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
 
 function onCreateNewBraindump(): void
 {
-  braindumpStore.editedBraindump = Constants.DEFAULT_BRAINDUMP;
+  braindumpStore.editedBraindump = deepClone(Constants.DEFAULT_BRAINDUMP);
 
-  edited.value = Constants.DEFAULT_BRAINDUMP;
+  edited.value = braindumpStore.editedBraindump;
 
   onClickEdit();
 }
@@ -253,7 +253,7 @@ function onClickCancel(): void
 {
   if (braindumpStore.editedBraindump)
   {
-    edited.value = braindumpStore.editedBraindump;
+    edited.value = deepClone(toRaw(braindumpStore.editedBraindump));
   }
 
   editing.value = false;
@@ -450,6 +450,8 @@ async function onClickSaveBraindump(): Promise<void>
   edited.value.Data = await aes.decryptString(createdBraindumpResponseDto.Data, aesKeyStore.aesKey);
   edited.value.Name = createdBraindumpResponseDto.Name ? await aes.decryptString(createdBraindumpResponseDto.Name, aesKeyStore.aesKey) : '';
   edited.value.Notes = createdBraindumpResponseDto.Notes ? await aes.decryptString(createdBraindumpResponseDto.Notes, aesKeyStore.aesKey) : '';
+
+  braindumpStore.editedBraindump = deepClone(toRaw(edited.value));
 
   editing.value = false;
 }

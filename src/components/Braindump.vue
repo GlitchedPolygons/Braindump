@@ -5,7 +5,7 @@ import {nextTick, onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {logout} from "@/util.ts";
+import {deepClone, logout} from "@/util.ts";
 import {AES, aesKeyStore} from "@/aes.ts";
 import Account from "@/components/Account.vue";
 import Tools from "@/components/Tools.vue";
@@ -402,7 +402,7 @@ async function openBraindump(dump: Braindump): Promise<void>
 
       <BraindumpEditor ref="braindumpEditorRef"
                        v-if="selectedMenuItem === 2"
-                       @onDeleteOpenDump="braindumpStore.editedBraindump = Constants.DEFAULT_BRAINDUMP; onSelectedMenuItem(3);" />
+                       @onDeleteOpenDump="braindumpStore.editedBraindump = deepClone(Constants.DEFAULT_BRAINDUMP); onSelectedMenuItem(3);" />
 
       <ListBraindumps v-if="selectedMenuItem === 3"
                       @onSelectBraindump="openBraindump" />

@@ -62,3 +62,36 @@ svg.md-editor-icon {
         padding: 1.2rem;
     }
 }
+
+@-moz-keyframes theSpinsM8 {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes theSpinsM8 {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes theSpinsM8 {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.pending-search-indicator {
+    animation: thaSpinzM8 666ms linear infinite;
+    -moz-animation: thaSpinzM8 666ms linear infinite;
+    -webkit-animation: thaSpinzM8 666ms linear infinite;
+}
