@@ -15,4 +15,5 @@ export const braindumpStore = reactive({
     braindumps: [],
     loggedIn: false,
     workingOffline: false,
+    defibrillatorToken: ''
 });

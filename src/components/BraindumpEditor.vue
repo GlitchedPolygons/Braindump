@@ -6,6 +6,7 @@ import {onMounted, reactive, ref, toRaw, nextTick} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+
 import {
   arrayBufferToHexEncodedString,
   deepClone,
@@ -15,6 +16,7 @@ import {
   getUnixTimestamp,
   logout
 } from "@/util.ts";
+
 import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 
@@ -24,9 +26,10 @@ let editing = ref(true);
 
 let edited = ref(deepClone(Constants.DEFAULT_BRAINDUMP));
 
-let nameEncryptionTask: Promise<string>;
-let notesEncryptionTask: Promise<string>;
-let markdownEncryptionTask: Promise<string>;
+let saveDebounce: number | null = null;
+let nameEncryptionTask: Promise<string> | null = null;
+let notesEncryptionTask: Promise<string> | null = null;
+let markdownEncryptionTask: Promise<string> | null = null;
 
 let busy = ref(false);
 
@@ -83,7 +86,7 @@ const toolbar = [
 
 defineExpose({onCreateNewBraindump});
 
-const emit = defineEmits(['onDeleteOpenDump']);
+const emit = defineEmits(['onCloseEditor']);
 
 config({
   editorConfig: {
@@ -174,40 +177,36 @@ function onClickCheckbox(clickEvent: Event): void
   );
 
   onChangedMarkdown(edited.value.Data);
-  onClickSaveBraindump();
+
+  nextTick().then(saveBraindump);
 }
 
 function onChangedName(changeEvent: Event)
 {
   const element = changeEvent.target as HTMLInputElement;
 
-  if (!element || !element.value)
-  {
-    nameEncryptionTask = new Promise<string>(() => '');
-    return;
-  }
+  nameEncryptionTask = aes.encryptString(element?.value ?? '(Untitled)', aesKeyStore.aesKey);
 
-  nameEncryptionTask = aes.encryptString(element?.value ?? '', aesKeyStore.aesKey);
+  debounceSave();
 }
 
 function onChangedNotes(changeEvent: Event)
 {
   const element = changeEvent.target as HTMLInputElement;
 
-  if (!element || !element.value)
-  {
-    notesEncryptionTask = new Promise<string>(() => '');
-    return;
-  }
+  notesEncryptionTask =
+      !element || !element.value
+          ? new Promise<string>(() => '')
+          : aes.encryptString(element?.value ?? '', aesKeyStore.aesKey);
 
-  notesEncryptionTask = aes.encryptString(element.value, aesKeyStore.aesKey);
+  debounceSave();
 }
 
 function onChangedMarkdown(markdown: string): void
 {
   markdownEncryptionTask = aes.encryptString(markdown, aesKeyStore.aesKey);
 
-  hookIntoCheckboxInputEvents();
+  debounceSave();
 }
 
 async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<void>
@@ -312,16 +311,16 @@ function onClickEdit(): void
   editing.value = true;
 }
 
-function onClickCancel(): void
+function onClickDone(): void
 {
-  if (braindumpStore.editedBraindump)
-  {
-    edited.value = deepClone(toRaw(braindumpStore.editedBraindump));
-  }
-
   editing.value = false;
 
   hookIntoCheckboxInputEvents();
+
+  if (!edited.value.Guid)
+  {
+    emit('onCloseEditor');
+  }
 }
 
 async function onClickExport(): Promise<void>
@@ -329,14 +328,14 @@ async function onClickExport(): Promise<void>
   await exportBraindump(edited.value.Guid, aes);
 }
 
-async function onClickDelete(): Promise<void>
+async function onClickDelete(clickEvent: Event): Promise<void>
 {
   if (!edited.value)
   {
     return;
   }
 
-  if (!confirm(`Are you sure that you want to delete Braindump "${edited.value.Name}"?`))
+  if (!clickEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${edited.value.Name}"?`))
   {
     return;
   }
@@ -358,43 +357,38 @@ async function onClickDelete(): Promise<void>
     return;
   }
 
-  emit('onDeleteOpenDump');
+  emit('onCloseEditor');
 }
 
-async function onClickSaveBraindump(): Promise<void>
+function debounceSave(): void
 {
-  if (!edited.value.Name)
+  if (saveDebounce !== null)
   {
-    alert('Please enter a name for your braindump.');
-    return;
+    window.clearTimeout(saveDebounce);
   }
 
-  if (edited.value.Notes === null || edited.value.Notes === ' ')
+  saveDebounce = window.setTimeout(() =>
   {
-    edited.value.Notes = '';
-    notesEncryptionTask = new Promise<string>(() => '');
+    saveBraindump();
+    saveDebounce = null;
+  }, 1024);
+}
+
+async function saveBraindump(): Promise<void>
+{
+  markdownEncryptionTask ??= aes.encryptString(edited?.value?.Data ?? '', aesKeyStore.aesKey);
+
+  notesEncryptionTask ??= aes.encryptString(edited?.value?.Notes ?? '', aesKeyStore.aesKey);
+
+  let name: string = edited?.value?.Name ?? '';
+
+  if (name.length < 1)
+  {
+    name = '(Untitled)';
+    nameEncryptionTask = null;
   }
 
-  if (!edited.value.Data)
-  {
-    edited.value.Data = '';
-    onChangedMarkdown('');
-  }
-
-  if (!markdownEncryptionTask)
-  {
-    markdownEncryptionTask = aes.encryptString(edited.value.Data, aesKeyStore.aesKey);
-  }
-
-  if (!notesEncryptionTask)
-  {
-    notesEncryptionTask = aes.encryptString(edited.value.Notes, aesKeyStore.aesKey);
-  }
-
-  if (!nameEncryptionTask)
-  {
-    nameEncryptionTask = aes.encryptString(edited.value.Name, aesKeyStore.aesKey);
-  }
+  nameEncryptionTask ??= aes.encryptString(name, aesKeyStore.aesKey);
 
   if (busy.value === true)
   {
@@ -402,10 +396,6 @@ async function onClickSaveBraindump(): Promise<void>
   }
 
   busy.value = true;
-
-  const encryptedName = nameEncryptionTask ? await nameEncryptionTask : '';
-  const encryptedNotes = notesEncryptionTask ? await notesEncryptionTask : '';
-  const encryptedMarkdown = markdownEncryptionTask ? await markdownEncryptionTask : '';
 
   /*
   const nameAvailabilityCheckRequestContext = {
@@ -433,6 +423,10 @@ async function onClickSaveBraindump(): Promise<void>
   */
 
   const isNew: boolean = !edited.value.Guid;
+
+  const encryptedName: string = nameEncryptionTask ? await nameEncryptionTask : '';
+  const encryptedNotes: string = notesEncryptionTask ? await notesEncryptionTask : '';
+  const encryptedMarkdown: string = markdownEncryptionTask ? await markdownEncryptionTask : '';
 
   const url: string =
       isNew
@@ -513,12 +507,18 @@ async function onClickSaveBraindump(): Promise<void>
   edited.value.LastModificationTimestampUTC = createdBraindumpResponseDto.LastModificationTimestampUTC;
 
   edited.value.Data = await aes.decryptString(createdBraindumpResponseDto.Data, aesKeyStore.aesKey);
-  edited.value.Name = createdBraindumpResponseDto.Name ? await aes.decryptString(createdBraindumpResponseDto.Name, aesKeyStore.aesKey) : '';
-  edited.value.Notes = createdBraindumpResponseDto.Notes ? await aes.decryptString(createdBraindumpResponseDto.Notes, aesKeyStore.aesKey) : '';
+
+  edited.value.Name =
+      createdBraindumpResponseDto.Name
+          ? await aes.decryptString(createdBraindumpResponseDto.Name, aesKeyStore.aesKey)
+          : '';
+
+  edited.value.Notes =
+      createdBraindumpResponseDto.Notes
+          ? await aes.decryptString(createdBraindumpResponseDto.Notes, aesKeyStore.aesKey)
+          : '';
 
   braindumpStore.editedBraindump = deepClone(toRaw(edited.value));
-
-  editing.value = false;
 
   hookIntoCheckboxInputEvents();
 }
@@ -542,6 +542,7 @@ async function onClickSaveBraindump(): Promise<void>
           <p class="text-subtitle text-muted">
             Create or modify a braindump using the great <a href="https://www.markdownguide.org/getting-started/"
                                                             target="_blank">Markdown</a> syntax with this editor.
+            Changes are saved automatically.
           </p>
 
         </div>
@@ -583,7 +584,7 @@ async function onClickSaveBraindump(): Promise<void>
                        class="form-control"
                        v-model="edited.Name"
                        @input="onChangedName"
-                       v-on:keyup.enter="onClickSaveBraindump();"
+                       v-on:keyup.enter="saveBraindump();"
                        placeholder="Give your braindump a descriptive title">
               </div>
 
@@ -629,17 +630,9 @@ async function onClickSaveBraindump(): Promise<void>
 
                 <button type="button"
                         :disabled="busy"
-                        @click="onClickCancel"
-                        v-if="edited.Guid"
-                        class="btn btn-secondary bdmp-button cancel-button">
-                  Cancel
-                </button>
-
-                <button type="button"
-                        :disabled="busy"
-                        @click="onClickSaveBraindump"
+                        @click="onClickDone"
                         class="btn btn-primary bdmp-button save-button">
-                  {{ edited.Guid ? 'Save' : 'Create' }}
+                  Done
                 </button>
 
               </div>
@@ -687,7 +680,8 @@ async function onClickSaveBraindump(): Promise<void>
       </button>
 
       <button type="button"
-              @click="onClickDelete"
+              @click="onClickDelete($event)"
+              title="Hold down Ctrl to confirm deletion"
               class="btn btn-danger bdmp-button edit-button">
         <i class="bi bi-trash"></i>
         Delete

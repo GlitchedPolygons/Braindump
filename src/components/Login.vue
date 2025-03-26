@@ -20,6 +20,8 @@ const username: Ref<string, string> = ref('');
 const password: Ref<string, string> = ref('');
 const totp: Ref<string, string> = ref('');
 
+const emit = defineEmits(['onLoginSuccessful']);
+
 onMounted(async () =>
 {
   const lastUsername = localStorage.getItem(LocalStorageKeys.LAST_USERNAME);
@@ -71,6 +73,8 @@ async function login()
       return;
     }
 
+    onChangeSaveDefibrillatorToken();
+
     response.json().then(responseBodyEnvelope =>
     {
       setTimeout(() => loggingIn.value = false, 1024);
@@ -91,7 +95,9 @@ async function login()
           localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
         }
 
-        window.location.reload();
+        braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
+
+        emit('onLoginSuccessful');
 
         braindumpStore.loggedIn = true;
       }

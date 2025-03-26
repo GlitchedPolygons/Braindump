@@ -22,6 +22,13 @@ onMounted(() =>
     lastAuthTokenRefreshUTC = 0;
   }
 
+  const storedDefibrillatorToken: string = localStorage.getItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN) ?? '';
+
+  if (storedDefibrillatorToken && storedDefibrillatorToken.length > 0)
+  {
+    braindumpStore.defibrillatorToken = storedDefibrillatorToken;
+  }
+
   showLoginPage.value = isLoginRequired();
 
   refreshAuthToken();
@@ -107,8 +114,8 @@ function refreshAuthToken()
     return;
   }
 
+  const defibrillatorToken: string = braindumpStore.defibrillatorToken;
   const expiredToken: string = localStorage.getItem(LocalStorageKeys.AUTH_TOKEN) ?? '';
-  const defibrillatorToken: string = localStorage.getItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN) ?? '';
 
   if (!expiredToken || !defibrillatorToken)
   {
@@ -163,6 +170,7 @@ function refreshAuthToken()
             showLoginPage.value = false;
 
             braindumpStore.loggedIn = true;
+            braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
           }
         });
       }
@@ -173,7 +181,8 @@ function refreshAuthToken()
 
 <template>
 
-  <Login v-if="showLoginPage && !braindumpStore.workingOffline" />
+  <Login @onLoginSuccessful="showLoginPage = false;"
+         v-if="showLoginPage && !braindumpStore.workingOffline" />
 
   <Braindump v-else />
 

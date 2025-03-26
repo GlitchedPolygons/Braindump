@@ -101,3 +101,170 @@ svg.md-editor-icon {
     margin-left: -1.80rem !important;
     margin-right: 8px !important;
 }
+
+/* Markdown styles for light theme */
+
+html[data-bs-theme=light] h6,
+html[data-bs-theme=light] .h6,
+html[data-bs-theme=light] h5,
+html[data-bs-theme=light] .h5,
+html[data-bs-theme=light] h4,
+html[data-bs-theme=light] .h4,
+html[data-bs-theme=light] h3,
+html[data-bs-theme=light] .h3,
+html[data-bs-theme=light] h2,
+html[data-bs-theme=light] .h2,
+html[data-bs-theme=light] h1,
+html[data-bs-theme=light] .h1 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+html[data-bs-theme=light] h1,
+html[data-bs-theme=light] .h1 {
+    font-size: calc(1.375rem + 1.5vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=light] h1,
+    html[data-bs-theme=light] .h1 {
+        font-size: 2.5rem;
+    }
+}
+
+html[data-bs-theme=light] h2,
+html[data-bs-theme=light] .h2 {
+    font-size: calc(1.325rem + .9vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=light] h2,
+    html[data-bs-theme=light] .h2 {
+        font-size: 2rem;
+    }
+}
+
+html[data-bs-theme=light] h3,
+html[data-bs-theme=light] .h3 {
+    font-size: calc(1.3rem + .6vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=light] h3,
+    html[data-bs-theme=light] .h3 {
+        font-size: 1.75rem;
+    }
+}
+
+html[data-bs-theme=light] h4,
+html[data-bs-theme=light] .h4 {
+    font-size: calc(1.275rem + .3vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=light] h4,
+    html[data-bs-theme=light] .h4 {
+        font-size: 1.5rem;
+    }
+}
+
+html[data-bs-theme=light] h5,
+html[data-bs-theme=light] .h5 {
+    font-size: 1.25rem;
+}
+
+html[data-bs-theme=light] h6,
+html[data-bs-theme=light] .h6 {
+    font-size: 1rem;
+}
+
+html[data-bs-theme=light] p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+
+/* Markdown styles for dark theme */
+
+html[data-bs-theme=dark] h6,
+html[data-bs-theme=dark] .h6,
+html[data-bs-theme=dark] h5,
+html[data-bs-theme=dark] .h5,
+html[data-bs-theme=dark] h4,
+html[data-bs-theme=dark] .h4,
+html[data-bs-theme=dark] h3,
+html[data-bs-theme=dark] .h3,
+html[data-bs-theme=dark] h2,
+html[data-bs-theme=dark] .h2,
+html[data-bs-theme=dark] h1,
+html[data-bs-theme=dark] .h1 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+html[data-bs-theme=dark] h1,
+html[data-bs-theme=dark] .h1 {
+    font-size: calc(1.375rem + 1.5vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=dark] h1,
+    html[data-bs-theme=dark] .h1 {
+        font-size: 2.5rem;
+    }
+}
+
+html[data-bs-theme=dark] h2,
+html[data-bs-theme=dark] .h2 {
+    font-size: calc(1.325rem + .9vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=dark] h2,
+    html[data-bs-theme=dark] .h2 {
+        font-size: 2rem;
+    }
+}
+
+html[data-bs-theme=dark] h3,
+html[data-bs-theme=dark] .h3 {
+    font-size: calc(1.3rem + .6vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=dark] h3,
+    html[data-bs-theme=dark] .h3 {
+        font-size: 1.75rem;
+    }
+}
+
+html[data-bs-theme=dark] h4,
+html[data-bs-theme=dark] .h4 {
+    font-size: calc(1.275rem + .3vw);
+}
+
+@media (min-width: 1200px) {
+    html[data-bs-theme=dark] h4,
+    html[data-bs-theme=dark] .h4 {
+        font-size: 1.5rem;
+    }
+}
+
+html[data-bs-theme=dark] h5,
+html[data-bs-theme=dark] .h5 {
+    font-size: 1.25rem;
+}
+
+html[data-bs-theme=dark] h6,
+html[data-bs-theme=dark] .h6 {
+    font-size: 1rem;
+}
+
+html[data-bs-theme=dark] p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}

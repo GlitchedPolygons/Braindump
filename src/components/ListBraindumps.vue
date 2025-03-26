@@ -20,7 +20,7 @@ let search = ref('');
 
 let refreshing = ref(false);
 
-let refreshListDebounce: number | null = null
+let refreshListDebounce: number | null = null;
 
 defineEmits(['onSelectBraindump']);
 
@@ -30,12 +30,11 @@ function onChangedSearchTerm()
 {
   if (refreshListDebounce !== null)
   {
-    clearTimeout(refreshListDebounce);
+    window.clearTimeout(refreshListDebounce);
   }
 
   refreshListDebounce = window.setTimeout(() =>
   {
-    console.log('refreshing...');
     refreshList();
     refreshListDebounce = null;
   }, 512);
@@ -90,6 +89,11 @@ async function refreshList(): Promise<void>
 
     dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
 
+    if (!dump.Name)
+    {
+      dump.Name = '(Untitled)';
+    }
+
     if (dump.Notes && dump.Notes.length !== 0)
     {
       dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
@@ -132,7 +136,7 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
   clickEvent.stopPropagation();
   clickEvent.preventDefault();
 
-  if (!confirm(`Are you sure that you want to delete Braindump "${dump.Name}"?`))
+  if (!clickEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${dump.Name}"?`))
   {
     return;
   }
@@ -265,7 +269,7 @@ function onClickClearSearch(): void
             </button>
 
             <button type="button"
-                    title="Delete this Braindump"
+                    title="Delete this Braindump (hold down Ctrl key to skip confirmation dialog)"
                     class="btn btn-danger"
                     @click="onClickDeleteDump($event, dump)">
               <i class="bi bi-trash"></i>
