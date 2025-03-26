@@ -68,6 +68,7 @@ const toolbar = [
 
   'link',
   'image',
+  'emoji',
   'table',
   'mermaid',
   'katex',
@@ -139,7 +140,30 @@ function hookIntoCheckboxInputEvents(): void
 
 function onClickCheckbox(clickEvent: Event): void
 {
-  // TODO: modify and save markdown accordingly
+  const htmlElement = clickEvent.target as HTMLElement;
+
+  if (!htmlElement || !htmlElement.nextSibling)
+  {
+    return;
+  }
+
+  const checked: string = `- [x]${htmlElement.nextSibling.textContent}`;
+  const unchecked: string = `- [ ]${htmlElement.nextSibling.textContent}`;
+
+  const newValueChecked: boolean = edited.value.Data.includes(unchecked);
+
+  edited.value.Data = edited.value.Data.replace
+  (
+      newValueChecked
+          ? unchecked
+          : checked,
+      newValueChecked
+          ? checked
+          : unchecked
+  );
+
+  onChangedMarkdown(edited.value.Data);
+  onClickSaveBraindump();
 }
 
 function onChangedName(changeEvent: Event)
@@ -285,6 +309,8 @@ function onClickCancel(): void
   }
 
   editing.value = false;
+
+  hookIntoCheckboxInputEvents();
 }
 
 async function onClickExport(): Promise<void>
@@ -482,6 +508,8 @@ async function onClickSaveBraindump(): Promise<void>
   braindumpStore.editedBraindump = deepClone(toRaw(edited.value));
 
   editing.value = false;
+
+  hookIntoCheckboxInputEvents();
 }
 
 </script>
