@@ -128,6 +128,11 @@ onMounted(() =>
 
 function hookIntoCheckboxInputEvents(): void
 {
+  if (editing.value === true)
+  {
+    return;
+  }
+
   nextTick().then(() =>
   {
     for (const element of document.getElementsByClassName('task-list-item-checkbox'))
@@ -140,6 +145,11 @@ function hookIntoCheckboxInputEvents(): void
 
 function onClickCheckbox(clickEvent: Event): void
 {
+  if (editing.value === true)
+  {
+    return;
+  }
+
   const htmlElement = clickEvent.target as HTMLElement;
 
   if (!htmlElement || !htmlElement.nextSibling)
@@ -686,6 +696,7 @@ async function onClickSaveBraindump(): Promise<void>
     <MdPreview :id="'md-preview'"
                :class="'md-noedit'"
                :theme="state.theme"
+               :language="'en-US'"
                :model-value="edited?.Data" />
 
     <br />
