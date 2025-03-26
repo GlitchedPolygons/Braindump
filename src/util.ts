@@ -169,6 +169,14 @@ export function save(data: any, filename: string)
     mouseEvent.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 
     downloadAnchor.dispatchEvent(mouseEvent);
+
+    setTimeout
+    (
+        () =>
+        {
+            (downloadAnchor as HTMLElement).remove();
+        }, 1024
+    );
 }
 
 export function deepClone<T>(object: T): T
