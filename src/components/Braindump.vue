@@ -250,7 +250,7 @@ async function openBraindump(dump: Braindump): Promise<void>
 
           <li v-if="braindumpStore.loggedIn"
               @click="onSelectedMenuItem(0)"
-              :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''}`">
+              :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''} sidebar-hide`">
             <a href="javascript:void(0);"
                class='sidebar-link'>
               <i class="bi bi-person-circle"></i>
@@ -260,7 +260,7 @@ async function openBraindump(dump: Braindump): Promise<void>
             </a>
           </li>
 
-          <li :class="`sidebar-item ${selectedMenuItem === 1 ? 'active' : ''}`"
+          <li :class="`sidebar-item ${selectedMenuItem === 1 ? 'active' : ''} sidebar-hide`"
               @click="onSelectedMenuItem(1)">
             <a href="javascript:void(0);"
                class='sidebar-link'>
@@ -271,7 +271,7 @@ async function openBraindump(dump: Braindump): Promise<void>
             </a>
           </li>
 
-          <li class="sidebar-item"
+          <li class="sidebar-item sidebar-hide"
               @click="braindumpStore.workingOffline = false; logout(!braindumpStore.workingOffline);">
             <a href="javascript:void(0);"
                class='sidebar-link'>
@@ -290,7 +290,7 @@ async function openBraindump(dump: Braindump): Promise<void>
             Dumps
           </li>
 
-          <li class="sidebar-item">
+          <li class="sidebar-item sidebar-hide">
 
             <button class="btn btn-success create-dump-button"
                     @click="onClickCreateNewBraindump">
@@ -299,7 +299,7 @@ async function openBraindump(dump: Braindump): Promise<void>
 
           </li>
 
-          <li :class="`mt-3 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''}`"
+          <li :class="`mt-3 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''} sidebar-hide`"
               @click="onSelectedMenuItem(3)">
 
             <a href="javascript:void(0);"
@@ -312,7 +312,7 @@ async function openBraindump(dump: Braindump): Promise<void>
 
           </li>
 
-          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''}`"
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''} sidebar-hide`"
               @click="onSelectedMenuItem(4)">
 
             <a href="javascript:void(0);"
@@ -325,7 +325,7 @@ async function openBraindump(dump: Braindump): Promise<void>
 
           </li>
 
-          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 5 ? 'active' : ''}`"
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 5 ? 'active' : ''} sidebar-hide`"
               @click="onSelectedMenuItem(5)">
 
             <a href="javascript:void(0);"
@@ -466,6 +466,12 @@ async function openBraindump(dump: Braindump): Promise<void>
 
 hr {
   color: rgba(172, 172, 172, 0.69) !important;
+}
+
+@media (max-width: 420px) {
+  .page-heading {
+    margin-bottom: 0 !important;
+  }
 }
 
 </style>
