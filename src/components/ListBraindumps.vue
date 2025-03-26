@@ -312,6 +312,16 @@ function onClickClearSearch(): void
   filter: brightness(125%);
 }
 
+html[data-bs-theme="light"] {
+  .card:hover {
+    filter: brightness(94%);
+  }
+
+  .braindump-list-entry:hover > span {
+    color: var(--bs-card-color);
+  }
+}
+
 .card:active {
   filter: brightness(100%);
 }
