@@ -30,7 +30,7 @@ export function getDateTimeString(date: Date): string
     const minutes: number = date.getMinutes();
     const hours: number = date.getHours();
 
-    return `${day}. ${Constants.MONTHS[monthIndex]} ${year}, ${hours}:${minutes < 10 ? `0${minutes}` : minutes} (UTC)`;
+    return `${day}. ${Constants.MONTHS[monthIndex]} ${year}, ${hours < 10 ? `0${hours}` : hours}:${minutes < 10 ? `0${minutes}` : minutes} (UTC)`;
 }
 
 export function logout(reload: boolean = true): void

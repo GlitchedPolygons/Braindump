@@ -6,7 +6,14 @@ import {onMounted, reactive, ref, toRaw, nextTick} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {arrayBufferToHexEncodedString, deepClone, exportBraindump, getUnixTimestamp, logout} from "@/util.ts";
+import {
+  arrayBufferToHexEncodedString,
+  deepClone,
+  exportBraindump, getDateFromUnixTimestamp,
+  getDateTimeString,
+  getUnixTimestamp,
+  logout
+} from "@/util.ts";
 import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 
@@ -653,6 +660,15 @@ async function onClickSaveBraindump(): Promise<void>
                :theme="state.theme"
                :model-value="edited?.Data" />
 
+    <br />
+    <br />
+
+    <small class="timestamps">
+      {{ `Created on: ${getDateTimeString(getDateFromUnixTimestamp(edited.CreationTimestampUTC))}` }}
+      <br />
+      {{ `Last modified on: ${getDateTimeString(getDateFromUnixTimestamp(edited.LastModificationTimestampUTC))}` }}
+    </small>
+
   </div>
 
 </template>
@@ -739,6 +755,11 @@ async function onClickSaveBraindump(): Promise<void>
 
 .dump-notes {
   opacity: 69.420%;
+}
+
+.timestamps {
+  font-weight: 600;
+  color: rgba(128, 128, 128, 0.69);
 }
 
 </style>
