@@ -1,4 +1,7 @@
-import {Constants, LocalStorageKeys} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
+import config from "@/assets/config.json";
+import {AES, aesKeyStore} from "@/aes.ts";
+import type {Braindump} from "@/braindump.ts";
 
 export function arrayBufferToHexEncodedString(buffer: ArrayBuffer): string
 {
@@ -105,11 +108,67 @@ export function isPasswordShitty(password: string): boolean
     return false;
 }
 
-export function exportBraindump(guid: string)
+export async function exportBraindump(guid: string, aes: AES): Promise<void>
 {
     console.log(`Exporting Braindump ${guid}`);
 
-    // todo: impl
+    const response: Response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}/${guid}`,
+        {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+            },
+        }
+    );
+
+    const responseBodyEnvelope = await response?.json();
+
+    if (!response.ok || !responseBodyEnvelope || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length !== 1)
+    {
+        return;
+    }
+
+    const dump: Braindump = responseBodyEnvelope.Items[0];
+
+    const title: string = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
+    const markdown = await aes.decryptString(dump.Data, aesKeyStore.aesKey);
+
+    save(markdown, `${title}.md`);
+}
+
+export function save(data: any, filename: string)
+{
+    if (!data)
+    {
+        console.error('Nothing to save...');
+        return;
+    }
+
+    if (!filename)
+    {
+        alert('No file name specified!');
+        return;
+    }
+
+    if (typeof data === 'object')
+    {
+        data = JSON.stringify(data, null, 4);
+    }
+
+    const blob = new Blob([data], {type: 'text/obj'});
+    const downloadAnchor = document.createElement('a');
+    const mouseEvent = document.createEvent('MouseEvents');
+
+    downloadAnchor.download = filename;
+    downloadAnchor.href = window.URL.createObjectURL(blob);
+    downloadAnchor.dataset.downloadurl = ['text/obj', downloadAnchor.download, downloadAnchor.href].join(':');
+
+    mouseEvent.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+    downloadAnchor.dispatchEvent(mouseEvent);
 }
 
 export function deepClone<T>(object: T): T

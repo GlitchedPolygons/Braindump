@@ -9,7 +9,8 @@ import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constan
 import {
   arrayBufferToHexEncodedString,
   deepClone,
-  exportBraindump, getDateFromUnixTimestamp,
+  exportBraindump,
+  getDateFromUnixTimestamp,
   getDateTimeString,
   getUnixTimestamp,
   logout
@@ -325,7 +326,7 @@ function onClickCancel(): void
 
 async function onClickExport(): Promise<void>
 {
-  exportBraindump(edited.value.Guid);
+  await exportBraindump(edited.value.Guid, aes);
 }
 
 async function onClickDelete(): Promise<void>

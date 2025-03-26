@@ -123,7 +123,7 @@ function onClickExport(clickEvent: Event, dump: Braindump): void
   clickEvent.stopPropagation();
   clickEvent.preventDefault();
 
-  exportBraindump(dump.Guid);
+  exportBraindump(dump.Guid, aes);
 }
 
 async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<void>
