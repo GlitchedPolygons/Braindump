@@ -258,12 +258,14 @@ function onClickClearSearch(): void
             <div style="flex-grow: 9;"></div>
 
             <button type="button"
+                    title="Export this Braindump to a file and download"
                     @click="onClickExport($event, dump)"
                     class="btn btn-secondary">
               <i class="bi bi-box-arrow-up-right"></i>
             </button>
 
             <button type="button"
+                    title="Delete this Braindump"
                     class="btn btn-danger"
                     @click="onClickDeleteDump($event, dump)">
               <i class="bi bi-trash"></i>
