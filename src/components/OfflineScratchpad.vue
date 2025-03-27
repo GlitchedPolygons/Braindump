@@ -22,6 +22,7 @@ const state = reactive({
 });
 
 let editing = ref(false);
+let hideHelpText = ref(false);
 let scratchpad = ref(deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump);
 
 let saveDebounce: number | null = null;
@@ -51,6 +52,8 @@ config({
 
 onMounted(() =>
 {
+  hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_OFFLINE_MODE_HELP_TEXT) === 'true';
+
   const storedScratchpadJson: string = localStorage.getItem(LocalStorageKeys.OFFLINE_SCRATCHPAD) ?? '';
 
   if (storedScratchpadJson && storedScratchpadJson.length !== 0)
@@ -129,6 +132,18 @@ function onClickCheckbox(clickEvent: Event): void
   onChangedMarkdown(scratchpad.value.Data);
 }
 
+function onClickHideHelpText(): void
+{
+  hideHelpText.value = true;
+  localStorage.setItem(LocalStorageKeys.HIDE_OFFLINE_MODE_HELP_TEXT, 'true');
+}
+
+function onClickShowHelpText(): void
+{
+  hideHelpText.value = false;
+  localStorage.setItem(LocalStorageKeys.HIDE_OFFLINE_MODE_HELP_TEXT, 'false');
+}
+
 </script>
 
 <template>
@@ -140,21 +155,28 @@ function onClickCheckbox(clickEvent: Event): void
       <div class="col-12 order-md-1 order-last">
 
         <h3>
-          Offline scratchpad
+          Offline scratchpad <sup><span class="badge bg-primary show-help-text-badge"
+                                        title="Show help text"
+                                        v-if="hideHelpText"
+                                        @click="onClickShowHelpText">?</span></sup>
         </h3>
 
-        <p class="text-subtitle text-muted">
+        <p class="text-subtitle text-muted"
+           v-if="!hideHelpText">
           This is your offline Braindump instance where you can quick-dump stuff that you don't want to synchronize with
           the server (or that you need even without an active internet connection, provided that you have downloaded the
           website onto your device).
         </p>
 
-        <p class="text-subtitle text-muted">
+        <p class="text-subtitle text-muted"
+           v-if="!hideHelpText">
           Edit the braindump text content using the great
           <a href="https://www.markdownguide.org/getting-started/"
              target="_blank">Markdown</a>
           syntax with this editor.<br />
-          Changes are saved automatically.
+          Changes are saved automatically. <span class="badge bg-primary hide-help-text-badge"
+                                                 title="Hide help text"
+                                                 @click="onClickHideHelpText">Hide</span>
         </p>
 
       </div>
@@ -189,7 +211,8 @@ function onClickCheckbox(clickEvent: Event): void
 
   </div>
 
-  <div v-else>
+  <div v-else
+       class="mt-2">
 
     <div class="edit-buttons">
 

@@ -16,6 +16,8 @@ import {
 
 onMounted(() =>
 {
+  hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_FILES_HELP_TEXT) === 'true';
+
   // todo: deserialize page size, sort order and sort col index here (from localstorage)
 
   refreshList();
@@ -30,6 +32,7 @@ let pageSize = ref(10);
 let pageCount = ref(10);
 let sortingOrder = ref(1);
 let sortingColumnIndex = ref(3);
+let hideHelpText = ref(false);
 
 async function refreshList(): Promise<void>
 {
@@ -144,6 +147,18 @@ function onClickNextPage(): void
   refreshList();
 }
 
+function onClickHideHelpText(): void
+{
+  hideHelpText.value = true;
+  localStorage.setItem(LocalStorageKeys.HIDE_FILES_HELP_TEXT, 'true');
+}
+
+function onClickShowHelpText(): void
+{
+  hideHelpText.value = false;
+  localStorage.setItem(LocalStorageKeys.HIDE_FILES_HELP_TEXT, 'false');
+}
+
 </script>
 
 <template>
@@ -155,17 +170,21 @@ function onClickNextPage(): void
       <div class="col-lg-8 order-md-1 order-last">
 
         <h3>
-          Files
+          Files <sup><span class="badge bg-primary show-help-text-badge"
+                           title="Show help text"
+                           v-if="hideHelpText"
+                           @click="onClickShowHelpText">?</span></sup>
         </h3>
 
-        <p class="text-subtitle text-muted">
+        <p class="text-subtitle text-muted"
+           v-if="!hideHelpText">
           These are all the files you've uploaded to your Braindump account. <br />
           You can free some space and regain quota by deleting some of them. <br />
           Just remember that doing so might break links in existing dumps that still make use of the underlying content
-          (e.g. images might not show up).
+          (e.g. images might not show up). <span class="badge bg-primary hide-help-text-badge"
+                                                 title="Hide help text"
+                                                 @click="onClickHideHelpText">Hide</span>
         </p>
-
-        <br />
 
         <StorageQuotaIndicator />
 
@@ -185,8 +204,8 @@ function onClickNextPage(): void
       </span>
 
       <select class="form-select"
-              v-model="sortingColumnIndex"
               @change="refreshList"
+              v-model="sortingColumnIndex"
               id="sorting-column-index-dropdown">
 
         <option value="3">
@@ -238,10 +257,6 @@ function onClickNextPage(): void
               v-model="pageSize"
               @change="refreshList"
               id="sorting-column-index-dropdown">
-
-        <option value="2">
-          2
-        </option>
 
         <option value="10">
           10

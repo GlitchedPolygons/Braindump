@@ -34,6 +34,8 @@ let markdownEncryptionTask: Promise<string> | null = null;
 
 let busy = ref(false);
 
+let hideHelpText = ref(false);
+
 const aes: AES = new AES();
 
 const state = reactive({
@@ -70,6 +72,8 @@ config({
 
 onMounted(() =>
 {
+  hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_EDITOR_HELP_TEXT) === 'true';
+
   if (braindumpStore.editedBraindump)
   {
     editing.value = false;
@@ -86,6 +90,18 @@ onMounted(() =>
 
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
 });
+
+function onClickHideHelpText(): void
+{
+  hideHelpText.value = true;
+  localStorage.setItem(LocalStorageKeys.HIDE_EDITOR_HELP_TEXT, 'true');
+}
+
+function onClickShowHelpText(): void
+{
+  hideHelpText.value = false;
+  localStorage.setItem(LocalStorageKeys.HIDE_EDITOR_HELP_TEXT, 'false');
+}
 
 function hookIntoCheckboxInputEvents(): void
 {
@@ -474,14 +490,21 @@ async function saveBraindump(): Promise<void>
         <div class="col-12 order-md-1 order-last">
 
           <h3>
-            Editor
+            Editor <sup><span class="badge bg-primary show-help-text-badge"
+                              title="Show help text"
+                              v-if="hideHelpText"
+                              @click="onClickShowHelpText">?</span></sup>
           </h3>
 
-          <p class="text-subtitle text-muted">
+          <p class="text-subtitle text-muted"
+             v-if="!hideHelpText">
             Create or modify a braindump using the great <a href="https://www.markdownguide.org/getting-started/"
                                                             target="_blank">Markdown</a> syntax with this editor.
             Changes are saved automatically.
             All content is client-side encrypted <strong>before</strong> being sent to the server.
+            <span class="badge bg-primary hide-help-text-badge"
+                  title="Hide help text"
+                  @click="onClickHideHelpText">Hide</span>
           </p>
 
         </div>
@@ -490,7 +513,7 @@ async function saveBraindump(): Promise<void>
 
     </div>
 
-    <section class="section">
+    <section class="section mt-2">
 
       <div class="row"
            style="justify-content: center;">

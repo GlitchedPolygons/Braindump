@@ -268,3 +268,14 @@ html[data-bs-theme=dark] p {
     margin-top: 0;
     margin-bottom: 1rem;
 }
+
+.show-help-text-badge {
+    cursor: pointer;
+    margin-left: -2px;
+    transform: scale(0.7);
+}
+
+.hide-help-text-badge {
+    cursor: pointer;
+    margin-left: 4px;
+}

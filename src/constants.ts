@@ -12,6 +12,9 @@ export const LocalStorageKeys = Object.freeze
         FILES_SORT_ORDER: 'filesSortOrder',
         FILES_SORT_PAGE_SIZE: 'filesPageSize',
         FILES_SORT_COLUMN_INDEX: 'filesSortColumnIndex',
+        HIDE_FILES_HELP_TEXT: 'hideFilesHelpText',
+        HIDE_EDITOR_HELP_TEXT: 'hideEditorHelpText',
+        HIDE_OFFLINE_MODE_HELP_TEXT: 'hideOfflineModeHelpText',
     }
 );
 
