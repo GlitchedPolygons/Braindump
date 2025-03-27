@@ -6,7 +6,7 @@ import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {getUnixTimestamp, selectOnFocus, sha256} from "@/util.ts";
+import {getUnixTimestamp, refreshUserAccount, selectOnFocus, sha256} from "@/util.ts";
 
 declare var bootstrap: any;
 
@@ -99,7 +99,9 @@ async function login()
 
         emit('onLoginSuccessful');
 
-        braindumpStore.loggedIn = true;
+        braindumpStore.workingOffline = false;
+
+        refreshUserAccount();
       }
       else
       {

@@ -42,6 +42,7 @@ export const TypeNamesDTO = Object.freeze
         USER_DATA_RESPONSE_DTO: 'UserDataResponseDto',
         USER_DATA_REDUX_RESPONSE_DTO: 'UserDataReduxResponseDto',
         USER_FILE_UPLOAD_RESPONSE_DTO: 'UserFileUploadResponseDto',
+        USER_FILE_RESPONSE_DTO: 'UserFileResponseDto',
         USER_ENABLE_2FA_RESPONSE_DTO: 'UserEnableTwoFactorAuthResponseDto',
         USER_DISABLE_2FA_RESPONSE_DTO: 'UserDisableTwoFactorAuthResponseDto',
 

@@ -169,7 +169,7 @@ function refreshAuthToken()
 
             showLoginPage.value = false;
 
-            braindumpStore.loggedIn = true;
+            braindumpStore.workingOffline = false;
             braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
           }
         });

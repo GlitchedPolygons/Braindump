@@ -5,8 +5,10 @@ import {onMounted, ref} from "vue";
 import QrcodeVue from "qrcode.vue";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
-import {isPasswordShitty, logout, selectOnFocus, sha256} from "@/util.ts";
+import {bytesToFileSizeString, isPasswordShitty, logout, refreshUserAccount, selectOnFocus, sha256} from "@/util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {braindumpStore} from "@/braindump.ts";
+import StorageQuotaIndicator from "@/components/StorageQuotaIndicator.vue";
 
 let busy = ref(false);
 let enablingTotp = ref(false);
@@ -15,7 +17,6 @@ let changingEmail = ref(false);
 let confirmDeletion = ref(false);
 let copiedTotpSecret = ref(false);
 
-let user = ref();
 let newEmail = ref('');
 let newEmail2 = ref('');
 let newEmailTotp = ref('');
@@ -31,41 +32,7 @@ let copyAnim: number;
 
 const aes = new AES();
 
-onMounted(async () =>
-{
-  await refreshUserAccount();
-});
-
-async function refreshUserAccount(): Promise<void>
-{
-  const requestContext = {
-    method: 'GET',
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
-    },
-  };
-
-  const response: Response = await fetch
-  (
-      `${config.BackendBaseURL}${EndpointURLs.ME}`,
-      requestContext
-  );
-
-  if (!response.ok)
-  {
-    logout();
-  }
-
-  const responseBody = await response.json();
-
-  if (!responseBody || responseBody.Type !== TypeNamesDTO.USER_RESPONSE_DTO || responseBody.Items.length === 0)
-  {
-    logout();
-  }
-
-  user.value = responseBody.Items[0];
-}
+onMounted(refreshUserAccount);
 
 async function onClickChangePassword(): Promise<void>
 {
@@ -520,6 +487,8 @@ async function onClickDeleteAccount(): Promise<void>
           possible!).
         </p>
 
+        <StorageQuotaIndicator />
+
       </div>
 
     </div>
@@ -641,7 +610,7 @@ async function onClickDeleteAccount(): Promise<void>
                      class="form-control"
                      placeholder="Enter your current email"
                      readonly
-                     :value="user?.Email">
+                     :value="braindumpStore.user?.Email">
             </div>
 
             <div class="form-group my-2">
@@ -725,7 +694,7 @@ async function onClickDeleteAccount(): Promise<void>
           </div>
 
           <div class="card-body"
-               v-if="user?.TotpEnabled === false">
+               v-if="braindumpStore.user?.TotpEnabled === false">
 
             <p v-if="!enablingTotp">
               Great idea!

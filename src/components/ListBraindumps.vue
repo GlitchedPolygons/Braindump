@@ -10,7 +10,7 @@ import {
   getDateFromUnixTimestamp,
   getDateString,
   getDateTimeString,
-  getUnixTimestamp
+  getUnixTimestamp, refreshUserAccount
 } from "../util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
@@ -51,7 +51,7 @@ async function refreshList(): Promise<void>
 
   const response = await fetch
   (
-      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortBy=lastModificationTimestampUTC&sortingOrder=descending`,
+      `${config.BackendBaseURL}${EndpointURLs.DATA_ENTRIES}?page=1&pageSize=2147483646&sortingColumnIndex=2&sortingOrder=descending`,
       {
         method: 'GET',
         headers: {
@@ -79,6 +79,7 @@ async function refreshList(): Promise<void>
   const searchEnabled: boolean = !!search.value && search.value.length !== 0;
 
   braindumpStore.braindumps = [];
+  braindumpStore.workingOffline = false;
 
   for (let dump of responseBodyEnvelope.Items)
   {
@@ -177,23 +178,6 @@ function onClickClearSearch(): void
 
 <template>
 
-  <!--
-    <div class="page-title">
-      <div class="row">
-        <div class="col-lg-8 order-md-1 order-last">
-          <h3>
-            Braindumps
-          </h3>
-
-          <p class="text-subtitle text-muted">
-            Here's a list of all of your braindumps...
-          </p>
-        </div>
-      </div>
-    </div>
-  -->
-
-
   <div class="row">
 
     <div class="col-lg-8">
@@ -262,7 +246,7 @@ function onClickClearSearch(): void
             <div style="flex-grow: 9;"></div>
 
             <button type="button"
-                    title="Export this Braindump to a file and download"
+                    title="Click here to export this Braindump to a file"
                     @click="onClickExport($event, dump)"
                     class="btn btn-secondary">
               <i class="bi bi-box-arrow-up-right"></i>

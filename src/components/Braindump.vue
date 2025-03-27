@@ -5,7 +5,7 @@ import {nextTick, onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {deepClone, logout} from "@/util.ts";
+import {deepClone, logout, refreshUserAccount} from "@/util.ts";
 import {AES, aesKeyStore} from "@/aes.ts";
 import Account from "@/components/Account.vue";
 import Tools from "@/components/Tools.vue";
@@ -14,6 +14,7 @@ import ImportBraindumps from "@/components/ImportBraindumps.vue";
 import ExportBraindumps from "@/components/ExportBraindumps.vue";
 import {type Braindump, braindumpStore} from "@/braindump.ts";
 import ListBraindumps from "@/components/ListBraindumps.vue";
+import ListFiles from "@/components/ListFiles.vue";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -75,6 +76,8 @@ function refresh()
     {
       logout();
     }
+
+    refreshUserAccount();
 
     response.json().then(async responseBodyEnvelope =>
     {
@@ -269,7 +272,7 @@ async function openBraindump(dump: Braindump): Promise<void>
             Menu
           </li>
 
-          <li v-if="braindumpStore.loggedIn"
+          <li v-if="!braindumpStore.workingOffline"
               @click="onSelectedMenuItem(0)"
               :class="`sidebar-item ${selectedMenuItem === 0 ? 'active' : ''} `">
             <a href="javascript:void(0);"
@@ -298,7 +301,7 @@ async function openBraindump(dump: Braindump): Promise<void>
                class='sidebar-link'>
               <i class="bi bi-lock-fill"></i>
               <span>
-                {{ braindumpStore.loggedIn ? 'Logout' : 'Exit' }}
+                {{ braindumpStore.workingOffline ? 'Exit' : 'Logout' }}
               </span>
             </a>
           </li>
@@ -328,6 +331,20 @@ async function openBraindump(dump: Braindump): Promise<void>
               <i class="bi bi-list"></i>
               <span>
                 List
+              </span>
+            </a>
+
+          </li>
+
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 6 ? 'active' : ''} `"
+              v-if="!braindumpStore.workingOffline"
+              @click="onSelectedMenuItem(6)">
+
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-files"></i>
+              <span>
+                Files
               </span>
             </a>
 
@@ -431,6 +448,8 @@ async function openBraindump(dump: Braindump): Promise<void>
       <ImportBraindumps v-if="selectedMenuItem === 4" />
 
       <ExportBraindumps v-if="selectedMenuItem === 5" />
+
+      <ListFiles v-if="selectedMenuItem === 6" />
 
     </div>
 

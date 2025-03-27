@@ -8,12 +8,22 @@ export class Braindump {
     Name: string = '';
     Data: string = '';
     Private: boolean = true;
-};
+}
+
+export class BraindumpFile {
+    Guid: string = '';
+    Notes: string = '';
+    SHA256: string = '';
+    FileName: string = '';
+    FileSizeBytes: number = 0;
+    CreationTimestampUTC: number = 0;
+    LastModificationTimestampUTC: number | null = null;
+}
 
 export const braindumpStore = reactive({
     editedBraindump: new Braindump(),
     braindumps: [],
-    loggedIn: false,
     workingOffline: false,
-    defibrillatorToken: ''
+    defibrillatorToken: '',
+    user: {}
 });

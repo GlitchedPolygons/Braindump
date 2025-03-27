@@ -1,7 +1,7 @@
-import {Constants, EndpointURLs, LocalStorageKeys} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
-import type {Braindump} from "@/braindump.ts";
+import {type Braindump, braindumpStore} from "@/braindump.ts";
 
 export function arrayBufferToHexEncodedString(buffer: ArrayBuffer): string
 {
@@ -190,4 +190,52 @@ export function deepClone<T>(object: T): T
     console.warn('structuredClone function not available in this environment; reverting to JSON-based deep clone heuristics...');
 
     return JSON.parse(JSON.stringify(object));
+}
+
+export function bytesToFileSizeString(bytes: number): string
+{
+    const units: string[] = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    const unitCount: number = units.length;
+
+    let result: number = bytes;
+    let unitIndex: number = 0;
+
+    while (result >= 1024 && unitCount > unitIndex + 1)
+    {
+        result /= 1024;
+        ++unitIndex;
+    }
+
+    return `${result.toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`;
+}
+
+export async function refreshUserAccount(): Promise<void>
+{
+    const requestContext = {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+        },
+    };
+
+    const response: Response = await fetch
+    (
+        `${config.BackendBaseURL}${EndpointURLs.ME}`,
+        requestContext
+    );
+
+    if (!response.ok)
+    {
+        logout();
+    }
+
+    const responseBody = await response.json();
+
+    if (!responseBody || responseBody.Type !== TypeNamesDTO.USER_RESPONSE_DTO || responseBody.Items.length === 0)
+    {
+        logout();
+    }
+
+    braindumpStore.user = responseBody.Items[0];
 }
