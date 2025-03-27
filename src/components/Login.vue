@@ -135,15 +135,30 @@ function onClickWorkOffline(): void
   <div id="auth">
 
     <div class="row h-100">
+
       <div class="col-lg-5 col-12">
+
         <div id="auth-left">
 
           <div class="auth-logo"
                style="margin-bottom: 5.0rem;">
 
+            <!--
+
             <a href="javascript:void(0);">
+
               <img :src="logoSrc"
+                   width="128"
+                   height="128"
                    alt=""></a>
+
+            -->
+
+            <h1>
+              Braindump <img :src="logoSrc"
+                             width="36"
+                             alt="">
+            </h1>
 
           </div>
 

@@ -273,6 +273,7 @@ function getFileUri(file: BraindumpFile): string
           </a>
 
           <button type="button"
+                  title="Hold down Ctrl to directly delete and skip confirmation dialog"
                   @click="onClickDeleteFile($event, file);"
                   class="btn btn-danger bdmp-button">
             <i class="bi bi-trash"></i>

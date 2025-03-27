@@ -1,6 +1,6 @@
 {
   "BackendBaseURL": "https://api-dev.glitchedpolygons.com/content-dump",
   "FrontendBaseURL": "https://dev-braindump.glitchedpolygons.com",
-  "LoginLogoURL": "https://api.files.glitchedpolygons.com/api/v1/files/glitched-polygons-icon-80x80-blue-variant.png",
+  "LoginLogoURL": "https://api.files.glitchedpolygons.com/api/v1/files/brain-256x256.png",
   "ThemeSwitcherLogoURL": "https://api.files.glitchedpolygons.com/api/v1/files/glitched-polygons-icon-80x80-blue-variant.png"
 }

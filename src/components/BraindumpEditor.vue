@@ -77,14 +77,14 @@ onMounted(() =>
     edited.value = deepClone(toRaw(braindumpStore.editedBraindump));
   }
 
+  hookIntoCheckboxInputEvents();
+
   window.onChangedTheme = (theme: string) =>
   {
     state.theme = theme;
   };
 
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
-
-  hookIntoCheckboxInputEvents();
 });
 
 function hookIntoCheckboxInputEvents(): void
@@ -111,7 +111,7 @@ function onClickCheckbox(clickEvent: Event): void
     return;
   }
 
-  toggleCheckboxInMarkdown(clickEvent, edited.value);
+  toggleCheckboxInMarkdown(clickEvent, edited);
 
   onChangedMarkdown(edited.value.Data, true);
 
@@ -254,8 +254,6 @@ function onClickEdit(): void
 function onClickDone(): void
 {
   editing.value = false;
-
-  hookIntoCheckboxInputEvents();
 
   if (!edited.value.Guid)
   {
@@ -621,7 +619,7 @@ async function saveBraindump(): Promise<void>
 
       <button type="button"
               @click="onClickDelete($event)"
-              title="Hold down Ctrl to confirm deletion"
+              title="Hold down Ctrl to directly delete and skip confirmation dialog"
               class="btn btn-danger bdmp-button edit-button">
         <i class="bi bi-trash"></i>
         Delete
@@ -632,6 +630,7 @@ async function saveBraindump(): Promise<void>
                :class="'md-noedit'"
                :theme="state.theme"
                :language="'en-US'"
+               @onHtmlChanged="hookIntoCheckboxInputEvents"
                :model-value="edited?.Data" />
 
     <br />

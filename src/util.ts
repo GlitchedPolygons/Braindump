@@ -2,6 +2,7 @@ import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constan
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 import {type Braindump, braindumpStore} from "@/braindump.ts";
+import type {Ref} from "vue";
 
 export function arrayBufferToHexEncodedString(buffer: ArrayBuffer): string
 {
@@ -240,7 +241,7 @@ export async function refreshUserAccount(): Promise<void>
     braindumpStore.user = responseBody.Items[0];
 }
 
-export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Braindump): void
+export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Ref): void
 {
     const htmlElement = clickEvent.target as HTMLElement;
 
@@ -252,9 +253,9 @@ export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Braindump
     const checked: string = `- [x]${htmlElement.nextSibling.textContent}`;
     const unchecked: string = `- [ ]${htmlElement.nextSibling.textContent}`;
 
-    const newValueChecked: boolean = braindump.Data.includes(unchecked);
+    const newValueChecked: boolean = braindump.value.Data.includes(unchecked);
 
-    braindump.Data = braindump.Data.replace
+    braindump.value.Data = braindump.value.Data.replace
     (
         newValueChecked
             ? unchecked

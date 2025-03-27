@@ -6,14 +6,15 @@ import {nextTick, onMounted, reactive, ref} from "vue";
 import {
   deepClone,
   getDateFromUnixTimestamp,
-  getDateTimeString, getUnixTimestamp,
+  getDateTimeString,
+  getUnixTimestamp,
   save,
   toggleCheckboxInMarkdown
 } from "@/util.ts";
 
 import {type Braindump} from "@/braindump.ts";
 import {Constants, LocalStorageKeys} from "@/constants.ts";
-import {MdEditor, MdPreview} from "md-editor-v3";
+import {config, MdEditor, MdPreview} from "md-editor-v3";
 
 const state = reactive({
   text: '',
@@ -25,6 +26,29 @@ let scratchpad = ref(deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump);
 
 let saveDebounce: number | null = null;
 
+config({
+  editorConfig: {
+    renderDelay: 64
+  },
+  markdownItPlugins(plugins, {editorId})
+  {
+    return plugins.map((item) =>
+    {
+      if (item.type === 'taskList')
+      {
+        return {
+          ...item,
+          options: {
+            ...item.options,
+            enabled: true,
+          },
+        };
+      }
+      return item;
+    });
+  },
+});
+
 onMounted(() =>
 {
   const storedScratchpadJson: string = localStorage.getItem(LocalStorageKeys.OFFLINE_SCRATCHPAD) ?? '';
@@ -34,14 +58,14 @@ onMounted(() =>
     scratchpad.value = JSON.parse(storedScratchpadJson);
   }
 
+  hookIntoCheckboxInputEvents();
+
   window.onChangedTheme = (theme: string) =>
   {
     state.theme = theme;
   };
 
   window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
-
-  hookIntoCheckboxInputEvents();
 });
 
 function hookIntoCheckboxInputEvents(): void
@@ -69,8 +93,6 @@ function onClickEdit(): void
 function onClickDone(): void
 {
   editing.value = false;
-
-  hookIntoCheckboxInputEvents();
 }
 
 function onClickExport(): void
@@ -89,12 +111,10 @@ function onChangedMarkdown(markdown: string): void
   {
     saveDebounce = null;
 
-    hookIntoCheckboxInputEvents();
-
     scratchpad.value.LastModificationTimestampUTC = getUnixTimestamp();
 
     localStorage.setItem(LocalStorageKeys.OFFLINE_SCRATCHPAD, JSON.stringify(scratchpad.value));
-  }, 512);
+  }, 256);
 }
 
 function onClickCheckbox(clickEvent: Event): void
@@ -104,11 +124,9 @@ function onClickCheckbox(clickEvent: Event): void
     return;
   }
 
-  toggleCheckboxInMarkdown(clickEvent, scratchpad.value);
+  toggleCheckboxInMarkdown(clickEvent, scratchpad);
 
-  localStorage.setItem(LocalStorageKeys.OFFLINE_SCRATCHPAD, JSON.stringify(scratchpad.value));
-
-  hookIntoCheckboxInputEvents();
+  onChangedMarkdown(scratchpad.value.Data);
 }
 
 </script>
@@ -195,6 +213,7 @@ function onClickCheckbox(clickEvent: Event): void
                :class="'md-noedit'"
                :theme="state.theme"
                :language="'en-US'"
+               @onHtmlChanged="hookIntoCheckboxInputEvents"
                :model-value="scratchpad?.Data" />
 
     <br />
