@@ -132,7 +132,8 @@ function getFileUri(file: BraindumpFile): string
 
   <br />
 
-  <div class="row">
+  <div class="row"
+       v-if="files && files.length !== 0">
 
     <div class="col-lg-3">
 
