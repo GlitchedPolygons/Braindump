@@ -6,7 +6,13 @@ import config from "@/assets/config.json";
 import {type BraindumpFile} from "@/braindump.ts";
 import StorageQuotaIndicator from "@/components/StorageQuotaIndicator.vue";
 import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {bytesToFileSizeString, getDateFromUnixTimestamp, getDateTimeString, refreshUserAccount} from "../util.ts";
+import {
+  bytesToFileSizeString,
+  getDateFromUnixTimestamp,
+  getDateTimeString,
+  pageCountFromTotal,
+  refreshUserAccount
+} from "../util.ts";
 
 onMounted(() =>
 {
@@ -21,6 +27,7 @@ let files = ref([]);
 
 let page = ref(1);
 let pageSize = ref(10);
+let pageCount = ref(10);
 let sortingOrder = ref(1);
 let sortingColumnIndex = ref(3);
 
@@ -65,9 +72,18 @@ async function refreshList(): Promise<void>
   }
 
   files.value = responseBodyEnvelope.Items;
+
+  pageCount.value = pageCountFromTotal(responseBodyEnvelope.Count, pageSize.value);
+
   refreshing.value = false;
 
   await refreshUserQuotaTask;
+
+  if (pageCount.value !== 0 && page.value > pageCount.value)
+  {
+    page.value = pageCount.value;
+    refreshList();
+  }
 }
 
 async function onClickDeleteFile(clickEvent: Event, file: BraindumpFile): Promise<void>
@@ -104,6 +120,28 @@ async function onClickDeleteFile(clickEvent: Event, file: BraindumpFile): Promis
 function getFileUri(file: BraindumpFile): string
 {
   return `${config.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}/${file.Guid}`;
+}
+
+function onClickPrevPage(): void
+{
+  if (page.value === 1)
+  {
+    return;
+  }
+
+  page.value--;
+  refreshList();
+}
+
+function onClickNextPage(): void
+{
+  if (page.value === pageCount.value)
+  {
+    return;
+  }
+
+  page.value++;
+  refreshList();
 }
 
 </script>
@@ -190,7 +228,7 @@ function getFileUri(file: BraindumpFile): string
 
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
 
       <span class="dropdown-label">
         Page size
@@ -200,6 +238,10 @@ function getFileUri(file: BraindumpFile): string
               v-model="pageSize"
               @change="refreshList"
               id="sorting-column-index-dropdown">
+
+        <option value="2">
+          2
+        </option>
 
         <option value="10">
           10
@@ -286,6 +328,29 @@ function getFileUri(file: BraindumpFile): string
 
     </div>
 
+  </div>
+
+  <div class="btn-group"
+       v-if="files && files.length !== 0"
+       role="group">
+
+    <button type="button"
+            :disabled="page === 1"
+            class="btn btn-secondary"
+            @click="onClickPrevPage"
+            title="Load the previous page of files"> &nbsp;«&nbsp;
+    </button>
+
+    <button class="btn btn-secondary btn-page-indicator-void">
+      {{ page }} / {{ pageCount }}
+    </button>
+
+    <button type="button"
+            class="btn btn-secondary"
+            :disabled="page === pageCount"
+            @click="onClickNextPage"
+            title="Load the next page of files"> &nbsp;»&nbsp;
+    </button>
   </div>
 
 

@@ -223,11 +223,13 @@ function onClickWorkOffline(): void
 
               <input class="form-check-input me-2"
                      type="checkbox"
+                     style="cursor: pointer"
                      v-model="saveDefibrillatorToken"
                      v-on:change="onChangeSaveDefibrillatorToken();"
                      id="checkbox-remember-me">
 
               <label class="form-check-label text-gray-600 unselectable"
+                     style="cursor: pointer"
                      for="checkbox-remember-me">
                 Keep me logged in
               </label>

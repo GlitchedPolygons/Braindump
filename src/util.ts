@@ -265,3 +265,8 @@ export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Ref): voi
             : unchecked
     );
 }
+
+export function pageCountFromTotal(totalCount: number, pageSize: number): number
+{
+    return Math.floor((totalCount + (pageSize - 1)) / pageSize);
+}
