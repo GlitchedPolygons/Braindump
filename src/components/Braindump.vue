@@ -356,6 +356,8 @@ async function openBraindump(dump: Braindump): Promise<void>
 
           </li>
 
+          <!--
+
           <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''} `"
               v-if="!braindumpStore.workingOffline"
               @click="onSelectedMenuItem(4)">
@@ -383,6 +385,8 @@ async function openBraindump(dump: Braindump): Promise<void>
             </a>
 
           </li>
+
+          -->
 
           <li :class="`mt-2 sidebar-item ${selectedMenuItem === 7 ? 'active' : ''} `"
               @click="onSelectedMenuItem(7)">
