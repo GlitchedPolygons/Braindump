@@ -130,6 +130,85 @@ function getFileUri(file: BraindumpFile): string
 
   </div>
 
+  <br />
+
+  <div class="row">
+
+    <div class="col-lg-3">
+
+      <span class="dropdown-label">
+        Sort by
+      </span>
+
+      <select class="form-select"
+              id="sorting-column-index-dropdown">
+
+        <option>
+          File size
+        </option>
+
+        <option>
+          File name
+        </option>
+
+        <option>
+          Upload timestamp
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="col-lg-3">
+
+      <span class="dropdown-label">
+        Sort order
+      </span>
+
+      <select class="form-select"
+              id="sorting-order-dropdown">
+
+        <option>
+          Descending
+        </option>
+
+        <option>
+          Ascending
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="col-lg-3">
+
+      <span class="dropdown-label">
+        Page size
+      </span>
+
+      <select class="form-select"
+              id="sorting-column-index-dropdown">
+
+        <option>
+          10
+        </option>
+
+        <option>
+          25
+        </option>
+
+        <option>
+          50
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <br />
+
   <div class="row">
 
     <div class="col-lg-4"
@@ -215,6 +294,10 @@ html[data-bs-theme="dark"] .card-footer {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.dropdown-label {
+  margin-bottom: 6px;
 }
 
 </style>
