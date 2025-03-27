@@ -15,6 +15,7 @@ import ExportBraindumps from "@/components/ExportBraindumps.vue";
 import {type Braindump, braindumpStore} from "@/braindump.ts";
 import ListBraindumps from "@/components/ListBraindumps.vue";
 import ListFiles from "@/components/ListFiles.vue";
+import OfflineScratchpad from "@/components/OfflineScratchpad.vue";
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -314,7 +315,8 @@ async function openBraindump(dump: Braindump): Promise<void>
             Dumps
           </li>
 
-          <li class="sidebar-item ">
+          <li class="sidebar-item"
+              v-if="!braindumpStore.workingOffline">
 
             <button class="btn btn-success create-dump-button"
                     @click="onClickCreateNewBraindump">
@@ -324,6 +326,7 @@ async function openBraindump(dump: Braindump): Promise<void>
           </li>
 
           <li :class="`mt-3 sidebar-item ${selectedMenuItem === 3 ? 'active' : ''} `"
+              v-if="!braindumpStore.workingOffline"
               @click="onSelectedMenuItem(3)">
 
             <a href="javascript:void(0);"
@@ -351,6 +354,7 @@ async function openBraindump(dump: Braindump): Promise<void>
           </li>
 
           <li :class="`mt-2 sidebar-item ${selectedMenuItem === 4 ? 'active' : ''} `"
+              v-if="!braindumpStore.workingOffline"
               @click="onSelectedMenuItem(4)">
 
             <a href="javascript:void(0);"
@@ -364,6 +368,7 @@ async function openBraindump(dump: Braindump): Promise<void>
           </li>
 
           <li :class="`mt-2 sidebar-item ${selectedMenuItem === 5 ? 'active' : ''} `"
+              v-if="!braindumpStore.workingOffline"
               @click="onSelectedMenuItem(5)">
 
             <a href="javascript:void(0);"
@@ -371,6 +376,19 @@ async function openBraindump(dump: Braindump): Promise<void>
               <i class="bi bi-box-seam-fill"></i>
               <span>
                 Export
+              </span>
+            </a>
+
+          </li>
+
+          <li :class="`mt-2 sidebar-item ${selectedMenuItem === 7 ? 'active' : ''} `"
+              @click="onSelectedMenuItem(7)">
+
+            <a href="javascript:void(0);"
+               class='sidebar-link'>
+              <i class="bi bi-wifi-off"></i>
+              <span>
+                Offline scratchpad
               </span>
             </a>
 
@@ -450,6 +468,8 @@ async function openBraindump(dump: Braindump): Promise<void>
       <ExportBraindumps v-if="selectedMenuItem === 5" />
 
       <ListFiles v-if="selectedMenuItem === 6" />
+
+      <OfflineScratchpad v-if="selectedMenuItem === 7" />
 
     </div>
 

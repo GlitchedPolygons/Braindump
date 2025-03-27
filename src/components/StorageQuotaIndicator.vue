@@ -1,9 +1,8 @@
 <script setup
         lang="ts">
 
-import {bytesToFileSizeString, refreshUserAccount} from "@/util.ts";
+import {bytesToFileSizeString} from "@/util.ts";
 import {braindumpStore} from "@/braindump.ts";
-import {onMounted} from "vue";
 
 </script>
 
