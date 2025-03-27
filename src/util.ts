@@ -239,3 +239,28 @@ export async function refreshUserAccount(): Promise<void>
 
     braindumpStore.user = responseBody.Items[0];
 }
+
+export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Braindump): void
+{
+    const htmlElement = clickEvent.target as HTMLElement;
+
+    if (!htmlElement || !htmlElement.nextSibling)
+    {
+        return;
+    }
+
+    const checked: string = `- [x]${htmlElement.nextSibling.textContent}`;
+    const unchecked: string = `- [ ]${htmlElement.nextSibling.textContent}`;
+
+    const newValueChecked: boolean = braindump.Data.includes(unchecked);
+
+    braindump.Data = braindump.Data.replace
+    (
+        newValueChecked
+            ? unchecked
+            : checked,
+        newValueChecked
+            ? checked
+            : unchecked
+    );
+}

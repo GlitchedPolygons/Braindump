@@ -3,7 +3,7 @@
 
 import 'md-editor-v3/lib/style.css';
 import {onMounted, reactive, ref, toRaw, nextTick} from "vue";
-import {braindumpStore} from "@/braindump.ts";
+import {Braindump, braindumpStore} from "@/braindump.ts";
 import {MdEditor, MdPreview, config} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
@@ -14,7 +14,8 @@ import {
   getDateFromUnixTimestamp,
   getDateTimeString,
   getUnixTimestamp,
-  logout
+  logout,
+  toggleCheckboxInMarkdown
 } from "@/util.ts";
 
 import bdConfig from "@/assets/config.json";
@@ -24,7 +25,7 @@ type ImgUploadCallback = (url: string) => void;
 
 let editing = ref(true);
 
-let edited = ref(deepClone(Constants.DEFAULT_BRAINDUMP));
+let edited = ref(deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump);
 
 let saveDebounce: number | null = null;
 let nameEncryptionTask: Promise<string> | null = null;
@@ -39,50 +40,6 @@ const state = reactive({
   text: '',
   theme: 'dark',
 });
-
-const toolbar = [
-  'revoke',
-  'next',
-
-  '-',
-
-  'task',
-  'unorderedList',
-  'orderedList',
-
-  '-',
-
-  'bold',
-  'italic',
-  'strikeThrough',
-
-  '-',
-
-  'title',
-  'sub',
-  'sup',
-
-  '-',
-
-  'quote',
-  'codeRow',
-  'code',
-
-  '-',
-
-  'link',
-  'image',
-  'emoji',
-  'table',
-  'mermaid',
-  'katex',
-
-  '=',
-
-  'pageFullscreen',
-  'preview',
-  'previewOnly',
-];
 
 defineExpose({onCreateNewBraindump});
 
@@ -154,29 +111,9 @@ function onClickCheckbox(clickEvent: Event): void
     return;
   }
 
-  const htmlElement = clickEvent.target as HTMLElement;
+  toggleCheckboxInMarkdown(clickEvent, edited.value);
 
-  if (!htmlElement || !htmlElement.nextSibling)
-  {
-    return;
-  }
-
-  const checked: string = `- [x]${htmlElement.nextSibling.textContent}`;
-  const unchecked: string = `- [ ]${htmlElement.nextSibling.textContent}`;
-
-  const newValueChecked: boolean = edited.value.Data.includes(unchecked);
-
-  edited.value.Data = edited.value.Data.replace
-  (
-      newValueChecked
-          ? unchecked
-          : checked,
-      newValueChecked
-          ? checked
-          : unchecked
-  );
-
-  onChangedMarkdown(edited.value.Data);
+  onChangedMarkdown(edited.value.Data, true);
 
   nextTick().then(saveBraindump);
 }
@@ -202,11 +139,14 @@ function onChangedNotes(changeEvent: Event)
   debounceSave();
 }
 
-function onChangedMarkdown(markdown: string): void
+function onChangedMarkdown(markdown: string, dontSave: boolean = false): void
 {
   markdownEncryptionTask = aes.encryptString(markdown, aesKeyStore.aesKey);
 
-  debounceSave();
+  if (!dontSave)
+  {
+    debounceSave();
+  }
 }
 
 async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<void>
@@ -543,6 +483,7 @@ async function saveBraindump(): Promise<void>
             Create or modify a braindump using the great <a href="https://www.markdownguide.org/getting-started/"
                                                             target="_blank">Markdown</a> syntax with this editor.
             Changes are saved automatically.
+            All content is client-side encrypted <strong>before</strong> being sent to the server.
           </p>
 
         </div>
@@ -618,7 +559,7 @@ async function saveBraindump(): Promise<void>
                         :preview="false"
                         :maxLength="1048576"
                         :language="'en-US'"
-                        :toolbars="toolbar"
+                        :toolbars="Constants.TOOLBAR"
                         :theme="state.theme"
                         :noUploadImg="braindumpStore.workingOffline"
                         @onUploadImg="onUploadImg"
@@ -629,7 +570,6 @@ async function saveBraindump(): Promise<void>
               <div class="form-group my-2 d-flex justify-content-end action-buttons">
 
                 <button type="button"
-                        :disabled="busy"
                         @click="onClickDone"
                         class="btn btn-primary bdmp-button save-button">
                   Done

@@ -8,7 +8,7 @@ export const LocalStorageKeys = Object.freeze
         LAST_USERNAME: 'lastUsername',
         LAST_AUTH_TOKEN_REFRESH_UTC: 'lastAuthTokenRefreshUTC',
         SAVE_DEFIBRILLATOR_TOKEN: 'saveDefibrillatorToken',
-        DRAFT: 'draft',
+        OFFLINE_SRATCHPAD: 'offlineScratchpad',
     }
 );
 
@@ -60,6 +60,8 @@ export const Constants = Object.freeze
 
         DEFAULT_BRAINDUMP_PAGE_INDEX: 3,
 
+        DEFAULT_BRAINDUMP_PAGE_INDEX_OFFLINE_MODE: 7,
+
         SIGN_UP_URL: 'https://glitchedpolygons.com/store/software/braindump',
 
         DEFAULT_BRAINDUMP: {
@@ -85,6 +87,52 @@ export const Constants = Object.freeze
             'October',
             'November',
             'December',
-        ])
+        ]),
+
+        TOOLBAR: Object.freeze(
+            [
+                'revoke',
+                'next',
+
+                '-',
+
+                'task',
+                'unorderedList',
+                'orderedList',
+
+                '-',
+
+                'bold',
+                'italic',
+                'strikeThrough',
+
+                '-',
+
+                'title',
+                'sub',
+                'sup',
+
+                '-',
+
+                'quote',
+                'codeRow',
+                'code',
+
+                '-',
+
+                'link',
+                'image',
+                'emoji',
+                'table',
+                'mermaid',
+                'katex',
+
+                '=',
+
+                'pageFullscreen',
+                'preview',
+                'previewOnly',
+            ]
+        )
     }
 );

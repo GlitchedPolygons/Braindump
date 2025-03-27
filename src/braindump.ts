@@ -3,7 +3,7 @@ import {reactive} from "vue";
 export class Braindump {
     Guid: string = '';
     CreationTimestampUTC: number = 0;
-    LastModificationTimestampUTC: number | null = null;
+    LastModificationTimestampUTC: number = 0;
     Notes: string = '';
     Name: string = '';
     Data: string = '';
@@ -17,7 +17,7 @@ export class BraindumpFile {
     FileName: string = '';
     FileSizeBytes: number = 0;
     CreationTimestampUTC: number = 0;
-    LastModificationTimestampUTC: number | null = null;
+    LastModificationTimestampUTC: number = 0;
 }
 
 export const braindumpStore = reactive({

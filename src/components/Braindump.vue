@@ -34,6 +34,11 @@ onMounted(() =>
   window.addEventListener("resize", onResizeWindow);
 
   onResizeWindow();
+
+  if (braindumpStore.workingOffline === true)
+  {
+    onSelectedMenuItem(Constants.DEFAULT_BRAINDUMP_PAGE_INDEX_OFFLINE_MODE);
+  }
 });
 
 function onResizeWindow(): void
@@ -49,8 +54,6 @@ function refresh()
   }
 
   refreshing = true;
-
-  // TODO: load offline dumps here
 
   if (braindumpStore.workingOffline)
   {
