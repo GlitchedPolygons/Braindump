@@ -484,19 +484,19 @@ async function onClickDeleteAccount(): Promise<void>
         <p class="text-subtitle text-muted">
           Manage your Braindump account here and perform security improvements, such as
           changing your password or enabling 2FA (that's a great idea, seriously! Always use 2FA wherever
-          possible!).<br />
+          possible!).
         </p>
 
         <StorageQuotaIndicator />
-        <br />
-        
+
       </div>
 
     </div>
 
   </div>
 
-  <section class="section">
+  <section class="section"
+           style="margin-top: 16px;">
 
     <div class="row"
          style="justify-content: center;">

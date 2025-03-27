@@ -27,7 +27,7 @@ let saveDebounce: number | null = null;
 
 onMounted(() =>
 {
-  const storedScratchpadJson: string = localStorage.getItem(LocalStorageKeys.OFFLINE_SRATCHPAD) ?? '';
+  const storedScratchpadJson: string = localStorage.getItem(LocalStorageKeys.OFFLINE_SCRATCHPAD) ?? '';
 
   if (storedScratchpadJson && storedScratchpadJson.length !== 0)
   {
@@ -93,7 +93,7 @@ function onChangedMarkdown(markdown: string): void
 
     scratchpad.value.LastModificationTimestampUTC = getUnixTimestamp();
 
-    localStorage.setItem(LocalStorageKeys.OFFLINE_SRATCHPAD, JSON.stringify(scratchpad.value));
+    localStorage.setItem(LocalStorageKeys.OFFLINE_SCRATCHPAD, JSON.stringify(scratchpad.value));
   }, 512);
 }
 
@@ -106,7 +106,7 @@ function onClickCheckbox(clickEvent: Event): void
 
   toggleCheckboxInMarkdown(clickEvent, scratchpad.value);
 
-  localStorage.setItem(LocalStorageKeys.OFFLINE_SRATCHPAD, JSON.stringify(scratchpad.value));
+  localStorage.setItem(LocalStorageKeys.OFFLINE_SCRATCHPAD, JSON.stringify(scratchpad.value));
 
   hookIntoCheckboxInputEvents();
 }

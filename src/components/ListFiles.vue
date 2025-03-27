@@ -3,12 +3,17 @@
 
 import {nextTick, onMounted, ref} from "vue";
 import config from "@/assets/config.json";
-import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {bytesToFileSizeString, getDateFromUnixTimestamp, getDateTimeString, refreshUserAccount} from "../util.ts";
-import {type BraindumpFile, braindumpStore} from "@/braindump.ts";
+import {type BraindumpFile} from "@/braindump.ts";
 import StorageQuotaIndicator from "@/components/StorageQuotaIndicator.vue";
+import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {bytesToFileSizeString, getDateFromUnixTimestamp, getDateTimeString, refreshUserAccount} from "../util.ts";
 
-onMounted(refreshList);
+onMounted(() =>
+{
+  // todo: deserialize page size, sort order and sort col index here (from localstorage)
+
+  refreshList();
+});
 
 let refreshing = ref(false);
 
@@ -17,7 +22,7 @@ let files = ref([]);
 let page = ref(1);
 let pageSize = ref(10);
 let sortingOrder = ref(1);
-let sortingColumnIndex = ref(2);
+let sortingColumnIndex = ref(3);
 
 async function refreshList(): Promise<void>
 {
@@ -27,6 +32,8 @@ async function refreshList(): Promise<void>
   }
 
   refreshing.value = true;
+
+  // todo: serialize page size, sort order and sort col index here (into localstorage)
 
   const response = await fetch
   (
@@ -130,29 +137,29 @@ function getFileUri(file: BraindumpFile): string
 
   </div>
 
-  <br />
-
-  <div class="row"
+  <div class="row sorting-options"
        v-if="files && files.length !== 0">
 
-    <div class="col-lg-3">
+    <div class="col-md-3">
 
       <span class="dropdown-label">
         Sort by
       </span>
 
       <select class="form-select"
+              v-model="sortingColumnIndex"
+              @change="refreshList"
               id="sorting-column-index-dropdown">
 
-        <option>
+        <option value="3">
           File size
         </option>
 
-        <option>
+        <option value="0">
           File name
         </option>
 
-        <option>
+        <option value="2">
           Upload timestamp
         </option>
 
@@ -160,20 +167,22 @@ function getFileUri(file: BraindumpFile): string
 
     </div>
 
-    <div class="col-lg-3">
+    <div class="col-md-3">
 
       <span class="dropdown-label">
         Sort order
       </span>
 
       <select class="form-select"
+              v-model="sortingOrder"
+              @change="refreshList"
               id="sorting-order-dropdown">
 
-        <option>
+        <option value="1">
           Descending
         </option>
 
-        <option>
+        <option value="0">
           Ascending
         </option>
 
@@ -181,24 +190,26 @@ function getFileUri(file: BraindumpFile): string
 
     </div>
 
-    <div class="col-lg-3">
+    <div class="col-md-3">
 
       <span class="dropdown-label">
         Page size
       </span>
 
       <select class="form-select"
+              v-model="pageSize"
+              @change="refreshList"
               id="sorting-column-index-dropdown">
 
-        <option>
+        <option value="10">
           10
         </option>
 
-        <option>
+        <option value="25">
           25
         </option>
 
-        <option>
+        <option value="50">
           50
         </option>
 
@@ -299,6 +310,13 @@ html[data-bs-theme="dark"] .card-footer {
 
 .dropdown-label {
   margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .sorting-options {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
 }
 
 </style>
