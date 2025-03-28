@@ -1,0 +1,16 @@
+{
+  "name": "PitaBrothers Dellamora",
+  "short_name": "PitaBrothers",
+  "description": "PitaBrothers Dellamora - Griechische Spezialitäten in der Region Basel",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "fullscreen",
+  "theme_color": "#ffffff",
+  "background_color": "#000000"
+}

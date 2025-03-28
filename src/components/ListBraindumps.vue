@@ -137,7 +137,9 @@ async function onClickDeleteDump(clickEvent: Event, dump: Braindump): Promise<vo
   clickEvent.stopPropagation();
   clickEvent.preventDefault();
 
-  if (!clickEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${dump.Name}"?`))
+  const keyboardEvent = clickEvent as KeyboardEvent;
+
+  if (!keyboardEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${dump.Name}"?`))
   {
     return;
   }

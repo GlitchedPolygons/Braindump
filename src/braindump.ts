@@ -22,8 +22,8 @@ export class BraindumpFile {
 
 export const braindumpStore = reactive({
     editedBraindump: new Braindump(),
-    braindumps: [],
+    braindumps: [] as Braindump[],
     workingOffline: false,
     defibrillatorToken: '',
-    user: {}
+    user: {} as any
 });

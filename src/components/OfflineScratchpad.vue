@@ -14,7 +14,7 @@ import {
 
 import {type Braindump} from "@/braindump.ts";
 import {Constants, LocalStorageKeys} from "@/constants.ts";
-import {config, MdEditor, MdPreview} from "md-editor-v3";
+import {config, MdEditor, MdPreview, type Themes, type ToolbarNames} from "md-editor-v3";
 
 const state = reactive({
   text: '',
@@ -63,12 +63,12 @@ onMounted(() =>
 
   hookIntoCheckboxInputEvents();
 
-  window.onChangedTheme = (theme: string) =>
+  (window as any).onChangedTheme = (theme: string) =>
   {
     state.theme = theme;
   };
 
-  window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
+  (window as any).onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
 });
 
 function hookIntoCheckboxInputEvents(): void
@@ -192,8 +192,8 @@ function onClickShowHelpText(): void
               :preview="false"
               :maxLength="4194304"
               :language="'en-US'"
-              :toolbars="Constants.TOOLBAR"
-              :theme="state.theme"
+              :toolbars="Constants.TOOLBAR as ToolbarNames[]"
+              :theme="state.theme as Themes"
               :noUploadImg="true"
               @onChange="onChangedMarkdown" />
 
@@ -234,7 +234,7 @@ function onClickShowHelpText(): void
 
     <MdPreview :id="'md-preview'"
                :class="'md-noedit'"
-               :theme="state.theme"
+               :theme="state.theme as Themes"
                :language="'en-US'"
                @onHtmlChanged="hookIntoCheckboxInputEvents"
                :model-value="scratchpad?.Data" />

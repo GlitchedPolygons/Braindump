@@ -50,7 +50,7 @@ onMounted(() =>
 
 let refreshing = ref(false);
 
-let files = ref([]);
+let files = ref<BraindumpFile[]>([]);
 
 let page = ref(1);
 let pageCount = ref(10);
@@ -122,7 +122,9 @@ async function onClickDeleteFile(clickEvent: Event, file: BraindumpFile): Promis
   clickEvent.stopPropagation();
   clickEvent.preventDefault();
 
-  if (!clickEvent.ctrlKey && !confirm(`Are you sure that you want to delete the file "${file.Guid}"?\n\nPlease keep in mind that any links to it inside a Braindump will break (e.g. images not showing up).`))
+  const keyboardEvent = clickEvent as KeyboardEvent;
+
+  if (!keyboardEvent.ctrlKey && !confirm(`Are you sure that you want to delete the file "${file.Guid}"?\n\nPlease keep in mind that any links to it inside a Braindump will break (e.g. images not showing up).`))
   {
     return;
   }

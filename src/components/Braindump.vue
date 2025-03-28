@@ -1,7 +1,7 @@
 <script setup
         lang="ts">
 
-import {nextTick, onMounted, ref} from "vue";
+import {nextTick, onMounted, type Ref, ref} from "vue";
 import config from "@/assets/config.json";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
@@ -35,7 +35,7 @@ onMounted(() =>
 
   onResizeWindow();
 
-  // todo: check if query param after first slash is 36 chars, and if yes: directly try to fetch braindump with that GUID and onSelectedMenuItem into the editor!
+  // TODO: check if query param after first slash is 36 chars, and if yes: directly try to fetch braindump with that GUID and onSelectedMenuItem into the editor!
 
   if (braindumpStore.workingOffline === true)
   {
@@ -213,7 +213,7 @@ async function onClickCreateNewBraindump(): Promise<void>
 
   await nextTick();
 
-  braindumpEditorRef.value?.onCreateNewBraindump();
+  (braindumpEditorRef.value as any)?.onCreateNewBraindump();
 }
 
 async function openBraindump(dump: Braindump): Promise<void>

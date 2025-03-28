@@ -53,9 +53,9 @@ function setTheme(dark: boolean, persist: boolean = false)
     localStorage.setItem(LocalStorageKeys.THEME, theme);
   }
 
-  if (window.onChangedTheme)
+  if ((window as any).onChangedTheme)
   {
-    window.onChangedTheme(theme);
+    (window as any).onChangedTheme(theme);
   }
 }
 

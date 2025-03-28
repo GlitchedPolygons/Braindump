@@ -3,8 +3,8 @@
 
 import 'md-editor-v3/lib/style.css';
 import {onMounted, reactive, ref, toRaw, nextTick} from "vue";
-import {Braindump, braindumpStore} from "@/braindump.ts";
-import {MdEditor, MdPreview, config} from 'md-editor-v3';
+import {Braindump, BraindumpFile, braindumpStore} from "@/braindump.ts";
+import {MdEditor, MdPreview, config, type ToolbarNames, type Themes} from 'md-editor-v3';
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
 import {
@@ -83,12 +83,12 @@ onMounted(() =>
 
   hookIntoCheckboxInputEvents();
 
-  window.onChangedTheme = (theme: string) =>
+  (window as any).onChangedTheme = (theme: string) =>
   {
     state.theme = theme;
   };
 
-  window.onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
+  (window as any).onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
 });
 
 function onClickHideHelpText(): void
@@ -250,7 +250,7 @@ async function onUploadImg(files: File[], callback: ImgUploadCallback): Promise<
       })
   );
 
-  callback(r.map((item) => `${bdConfig.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}/${item?.Guid}`));
+  callback(r.map(item => `${bdConfig.BackendBaseURL}${EndpointURLs.FILE_ENTRIES}/${(item as BraindumpFile)?.Guid}`) as any);
 }
 
 function onCreateNewBraindump(): void
@@ -289,7 +289,9 @@ async function onClickDelete(clickEvent: Event): Promise<void>
     return;
   }
 
-  if (!clickEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${edited.value.Name}"?`))
+  const keyboardEvent = clickEvent as KeyboardEvent;
+
+  if (!keyboardEvent.ctrlKey && !confirm(`Are you sure that you want to delete Braindump "${edited.value.Name}"?`))
   {
     return;
   }
@@ -580,8 +582,8 @@ async function saveBraindump(): Promise<void>
                         :preview="false"
                         :maxLength="1048576"
                         :language="'en-US'"
-                        :toolbars="Constants.TOOLBAR"
-                        :theme="state.theme"
+                        :toolbars="Constants.TOOLBAR as ToolbarNames[]"
+                        :theme="state.theme as Themes"
                         :noUploadImg="braindumpStore.workingOffline"
                         @onUploadImg="onUploadImg"
                         @onChange="onChangedMarkdown" />
@@ -651,7 +653,7 @@ async function saveBraindump(): Promise<void>
 
     <MdPreview :id="'md-preview'"
                :class="'md-noedit'"
-               :theme="state.theme"
+               :theme="state.theme as Themes"
                :language="'en-US'"
                @onHtmlChanged="hookIntoCheckboxInputEvents"
                :model-value="edited?.Data" />
