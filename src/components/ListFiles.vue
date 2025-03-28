@@ -17,9 +17,33 @@ import {
 onMounted(() =>
 {
   hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_FILES_HELP_TEXT) === 'true';
-  pageSize.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_PAGE_SIZE) ?? Constants.DEFAULT_FILES_PAGE_SIZE.toString());
-  sortingOrder.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_ORDER) ?? Constants.DEFAULT_FILES_SORT_ORDER.toString());
-  sortingColumnIndex.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_COLUMN_INDEX) ?? Constants.DEFAULT_FILES_SORT_COLUMN_INDEX.toString());
+
+  try
+  {
+    pageSize.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_PAGE_SIZE) ?? Constants.DEFAULT_FILES_PAGE_SIZE.toString()) ?? Constants.DEFAULT_FILES_PAGE_SIZE;
+  }
+  catch
+  {
+    pageSize.value = Constants.DEFAULT_FILES_PAGE_SIZE;
+  }
+
+  try
+  {
+    sortingOrder.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_ORDER) ?? Constants.DEFAULT_FILES_SORT_ORDER.toString()) ?? Constants.DEFAULT_FILES_SORT_ORDER;
+  }
+  catch
+  {
+    sortingOrder.value = Constants.DEFAULT_FILES_SORT_ORDER;
+  }
+
+  try
+  {
+    sortingColumnIndex.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_COLUMN_INDEX) ?? Constants.DEFAULT_FILES_SORT_COLUMN_INDEX.toString()) ?? Constants.DEFAULT_FILES_SORT_COLUMN_INDEX;
+  }
+  catch
+  {
+    sortingColumnIndex.value = Constants.DEFAULT_FILES_SORT_COLUMN_INDEX;
+  }
 
   refreshList();
 });
