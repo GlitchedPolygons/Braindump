@@ -486,6 +486,11 @@ function onClickTickAllCheckboxes(): void
   onChangedMarkdown(edited.value.Data);
 }
 
+function onClickReturnToList(): void
+{
+  emit('onCloseEditor');
+}
+
 </script>
 
 <template>
@@ -694,6 +699,13 @@ function onClickTickAllCheckboxes(): void
     </small>
 
   </div>
+
+  <button class="btn btn-sm btn-outline-secondary bdmp-button"
+          @click="onClickReturnToList"
+          style="margin-top: 8px;"
+          type="button">
+    ❮❮ &nbsp; Return to list
+  </button>
 
 </template>
 

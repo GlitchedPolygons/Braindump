@@ -192,18 +192,32 @@ function refresh()
   });
 }
 
-function onSelectedMenuItem(itemIndex: number)
+function onSelectedMenuItem(itemIndex: number): void
 {
   selectedMenuItem.value = itemIndex;
 
   if (!isDesktop.value)
   {
-    const sidebar = document.getElementById("sidebar");
+    const sidebar: HTMLElement | null = document.getElementById("sidebar");
 
-    sidebar?.classList.remove("active");
-    sidebar?.classList.add("inactive");
+    if (!sidebar)
+    {
+      return;
+    }
+
+    sidebar.classList.remove("active");
+    sidebar.classList.add("inactive");
 
     document.querySelector(".sidebar-backdrop")?.remove();
+
+    const body: HTMLBodyElement | null = document.querySelector("body");
+
+    if (!body)
+    {
+      return;
+    }
+
+    body.style.overflowY = "auto";
   }
 }
 
