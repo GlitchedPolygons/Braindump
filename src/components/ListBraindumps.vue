@@ -265,6 +265,12 @@ function onClickClearSearch(): void
 
         </div>
 
+        <div v-if="braindumpStore.braindumps && braindumpStore.braindumps.length === 0">
+          <h2>
+            Empty. Start braindumpin' now!
+          </h2>
+        </div>
+
       </div>
 
     </div>
