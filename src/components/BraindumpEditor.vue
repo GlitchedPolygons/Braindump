@@ -72,6 +72,8 @@ config({
 
 onMounted(() =>
 {
+  nameEncryptionTask = notesEncryptionTask = markdownEncryptionTask = null;
+
   hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_EDITOR_HELP_TEXT) === 'true';
 
   if (braindumpStore.editedBraindump)
@@ -138,7 +140,7 @@ function onChangedName(changeEvent: Event)
 {
   const element = changeEvent.target as HTMLInputElement;
 
-  nameEncryptionTask = aes.encryptString(element?.value ?? '(Untitled)', aesKeyStore.aesKey);
+  nameEncryptionTask = aes.encryptString(element?.value ?? Constants.DEFAULT_BRAINDUMP_NAME, aesKeyStore.aesKey);
 
   debounceSave();
 }
@@ -340,7 +342,7 @@ async function saveBraindump(): Promise<void>
 
   if (name.length < 1)
   {
-    name = '(Untitled)';
+    name = Constants.DEFAULT_BRAINDUMP_NAME;
     nameEncryptionTask = null;
   }
 
@@ -457,26 +459,31 @@ async function saveBraindump(): Promise<void>
 
   const createdBraindumpResponseDto = responseBodyEnvelope.Items[0];
 
+  if (!edited.value.Name)
+  {
+    edited.value.Name = Constants.DEFAULT_BRAINDUMP_NAME;
+  }
+
   edited.value.Guid = createdBraindumpResponseDto.Guid;
   edited.value.Private = createdBraindumpResponseDto.Private;
   edited.value.CreationTimestampUTC = createdBraindumpResponseDto.CreationTimestampUTC;
   edited.value.LastModificationTimestampUTC = createdBraindumpResponseDto.LastModificationTimestampUTC;
 
-  edited.value.Data = await aes.decryptString(createdBraindumpResponseDto.Data, aesKeyStore.aesKey);
-
-  edited.value.Name =
-      createdBraindumpResponseDto.Name
-          ? await aes.decryptString(createdBraindumpResponseDto.Name, aesKeyStore.aesKey)
-          : '';
-
-  edited.value.Notes =
-      createdBraindumpResponseDto.Notes
-          ? await aes.decryptString(createdBraindumpResponseDto.Notes, aesKeyStore.aesKey)
-          : '';
-
   braindumpStore.editedBraindump = deepClone(toRaw(edited.value));
 
   hookIntoCheckboxInputEvents();
+}
+
+function onClickUntickAllCheckboxes(): void
+{
+  edited.value.Data = edited.value.Data.replace(/\ \[x\]\ /g, ' [ ] ');
+  onChangedMarkdown(edited.value.Data);
+}
+
+function onClickTickAllCheckboxes(): void
+{
+  edited.value.Data = edited.value.Data.replace(/\ \[\ \]\ /g, ' [x] ');
+  onChangedMarkdown(edited.value.Data);
 }
 
 </script>
@@ -577,6 +584,24 @@ async function saveBraindump(): Promise<void>
 
               </div>
 
+              <div class="checkboxes-buttons">
+
+                <button type="button"
+                        @click="onClickUntickAllCheckboxes"
+                        class="btn btn-secondary bdmp-button edit-button">
+                  <i class="bi bi-square"></i>
+                  Untick all checkboxes
+                </button>
+
+                <button type="button"
+                        @click="onClickTickAllCheckboxes"
+                        class="btn btn-secondary bdmp-button edit-button">
+                  <i class="bi bi-check2-square"></i>
+                  Tick all checkboxes
+                </button>
+
+              </div>
+
               <MdEditor v-model="edited.Data"
                         :id="'md-editor'"
                         :preview="false"
@@ -649,6 +674,7 @@ async function saveBraindump(): Promise<void>
         <i class="bi bi-trash"></i>
         Delete
       </button>
+
     </div>
 
     <MdPreview :id="'md-preview'"
@@ -758,6 +784,10 @@ async function saveBraindump(): Promise<void>
 .timestamps {
   font-weight: 600;
   color: rgba(128, 128, 128, 0.69);
+}
+
+details {
+  margin-bottom: 8px;
 }
 
 </style>

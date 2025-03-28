@@ -68,6 +68,8 @@ export const Constants = Object.freeze
 
         DEFAULT_BRAINDUMP_PAGE_INDEX_OFFLINE_MODE: 7,
 
+        DEFAULT_BRAINDUMP_NAME: '(Untitled)',
+
         SIGN_UP_URL: 'https://glitchedpolygons.com/store/software/braindump',
 
         DEFAULT_BRAINDUMP: {

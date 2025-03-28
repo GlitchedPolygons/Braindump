@@ -144,6 +144,18 @@ function onClickShowHelpText(): void
   localStorage.setItem(LocalStorageKeys.HIDE_OFFLINE_MODE_HELP_TEXT, 'false');
 }
 
+function onClickUntickAllCheckboxes(): void
+{
+  scratchpad.value.Data = scratchpad.value.Data.replace(/\ \[x\]\ /g, ' [ ] ');
+  onChangedMarkdown(scratchpad.value.Data);
+}
+
+function onClickTickAllCheckboxes(): void
+{
+  scratchpad.value.Data = scratchpad.value.Data.replace(/\ \[\ \]\ /g, ' [x] ');
+  onChangedMarkdown(scratchpad.value.Data);
+}
+
 </script>
 
 <template>
@@ -186,6 +198,24 @@ function onClickShowHelpText(): void
   </div>
 
   <div v-if="editing">
+
+    <div class="checkboxes-buttons">
+
+      <button type="button"
+              @click="onClickUntickAllCheckboxes"
+              class="btn btn-secondary bdmp-button edit-button">
+        <i class="bi bi-square"></i>
+        Untick all checkboxes
+      </button>
+
+      <button type="button"
+              @click="onClickTickAllCheckboxes"
+              class="btn btn-secondary bdmp-button edit-button">
+        <i class="bi bi-check2-square"></i>
+        Tick all checkboxes
+      </button>
+
+    </div>
 
     <MdEditor v-model="scratchpad.Data"
               :id="'md-editor'"
@@ -332,6 +362,10 @@ function onClickShowHelpText(): void
 
 .md-editor {
   min-height: 777px;
+}
+
+details {
+  margin-bottom: 8px;
 }
 
 </style>

@@ -250,8 +250,8 @@ export function toggleCheckboxInMarkdown(clickEvent: Event, braindump: Ref): voi
         return;
     }
 
-    const checked: string = `- [x]${htmlElement.nextSibling.textContent}`;
-    const unchecked: string = `- [ ]${htmlElement.nextSibling.textContent}`;
+    const checked: string = ` [x]${htmlElement.nextSibling.textContent}`;
+    const unchecked: string = ` [ ]${htmlElement.nextSibling.textContent}`;
 
     const newValueChecked: boolean = braindump.value.Data.includes(unchecked);
 

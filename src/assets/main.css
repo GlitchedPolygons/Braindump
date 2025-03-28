@@ -279,3 +279,9 @@ html[data-bs-theme=dark] p {
     cursor: pointer;
     margin-left: 4px;
 }
+
+.checkboxes-buttons {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+}

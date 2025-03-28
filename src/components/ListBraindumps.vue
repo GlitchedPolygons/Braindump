@@ -92,7 +92,7 @@ async function refreshList(): Promise<void>
 
     if (!dump.Name)
     {
-      dump.Name = '(Untitled)';
+      dump.Name = Constants.DEFAULT_BRAINDUMP_NAME;
     }
 
     if (dump.Notes && dump.Notes.length !== 0)
