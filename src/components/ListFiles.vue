@@ -5,7 +5,7 @@ import {nextTick, onMounted, ref} from "vue";
 import config from "@/assets/config.json";
 import {type BraindumpFile} from "@/braindump.ts";
 import StorageQuotaIndicator from "@/components/StorageQuotaIndicator.vue";
-import {EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
+import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 import {
   bytesToFileSizeString,
   getDateFromUnixTimestamp,
@@ -17,8 +17,9 @@ import {
 onMounted(() =>
 {
   hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_FILES_HELP_TEXT) === 'true';
-
-  // todo: deserialize page size, sort order and sort col index here (from localstorage)
+  pageSize.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_PAGE_SIZE) ?? Constants.DEFAULT_FILES_PAGE_SIZE.toString());
+  sortingOrder.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_ORDER) ?? Constants.DEFAULT_FILES_SORT_ORDER.toString());
+  sortingColumnIndex.value = JSON.parse(localStorage.getItem(LocalStorageKeys.FILES_SORT_COLUMN_INDEX) ?? Constants.DEFAULT_FILES_SORT_COLUMN_INDEX.toString());
 
   refreshList();
 });
@@ -28,10 +29,10 @@ let refreshing = ref(false);
 let files = ref([]);
 
 let page = ref(1);
-let pageSize = ref(10);
 let pageCount = ref(10);
-let sortingOrder = ref(1);
-let sortingColumnIndex = ref(3);
+let pageSize = ref(Constants.DEFAULT_FILES_PAGE_SIZE);
+let sortingOrder = ref(Constants.DEFAULT_FILES_SORT_ORDER);
+let sortingColumnIndex = ref(Constants.DEFAULT_FILES_SORT_COLUMN_INDEX);
 let hideHelpText = ref(false);
 
 async function refreshList(): Promise<void>
@@ -43,7 +44,9 @@ async function refreshList(): Promise<void>
 
   refreshing.value = true;
 
-  // todo: serialize page size, sort order and sort col index here (into localstorage)
+  localStorage.setItem(LocalStorageKeys.FILES_PAGE_SIZE, JSON.stringify(pageSize.value));
+  localStorage.setItem(LocalStorageKeys.FILES_SORT_ORDER, JSON.stringify(sortingOrder.value));
+  localStorage.setItem(LocalStorageKeys.FILES_SORT_COLUMN_INDEX, JSON.stringify(sortingColumnIndex.value));
 
   const response = await fetch
   (

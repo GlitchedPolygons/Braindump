@@ -10,7 +10,7 @@ export const LocalStorageKeys = Object.freeze
         SAVE_DEFIBRILLATOR_TOKEN: 'saveDefibrillatorToken',
         OFFLINE_SCRATCHPAD: 'offlineScratchpad',
         FILES_SORT_ORDER: 'filesSortOrder',
-        FILES_SORT_PAGE_SIZE: 'filesPageSize',
+        FILES_PAGE_SIZE: 'filesPageSize',
         FILES_SORT_COLUMN_INDEX: 'filesSortColumnIndex',
         HIDE_FILES_HELP_TEXT: 'hideFilesHelpText',
         HIDE_EDITOR_HELP_TEXT: 'hideEditorHelpText',
@@ -79,6 +79,12 @@ export const Constants = Object.freeze
             Data: '',
             Private: true,
         },
+
+        DEFAULT_FILES_PAGE_SIZE: 10,
+
+        DEFAULT_FILES_SORT_ORDER: 1,
+
+        DEFAULT_FILES_SORT_COLUMN_INDEX: 3,
 
         MONTHS: Object.freeze([
             'January',

@@ -35,6 +35,8 @@ onMounted(() =>
 
   onResizeWindow();
 
+  // todo: check if query param after first slash is 36 chars, and if yes: directly try to fetch braindump with that GUID and onSelectedMenuItem into the editor!
+
   if (braindumpStore.workingOffline === true)
   {
     onSelectedMenuItem(Constants.DEFAULT_BRAINDUMP_PAGE_INDEX_OFFLINE_MODE);
