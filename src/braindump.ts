@@ -1,5 +1,11 @@
 import {reactive} from "vue";
 
+declare type BraindumpRedux = {
+    Guid: string,
+    Name: string,
+    Notes: string
+}
+
 export class Braindump {
     Guid: string = '';
     CreationTimestampUTC: number = 0;

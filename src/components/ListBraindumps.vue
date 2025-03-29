@@ -6,6 +6,7 @@ import {AES, aesKeyStore} from "@/aes.ts";
 import config from "@/assets/config.json";
 import {Braindump, braindumpStore} from "@/braindump.ts";
 import {
+  deepClone,
   exportBraindump,
   getDateFromUnixTimestamp,
   getDateString,
@@ -81,6 +82,10 @@ async function refreshList(): Promise<void>
   braindumpStore.braindumps = [];
   braindumpStore.workingOffline = false;
 
+  const emptyDump: Braindump = deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump;
+
+  let promises: Promise<Braindump>[] = [];
+
   for (let dump of responseBodyEnvelope.Items)
   {
     if (dump.Name === Constants.BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME)
@@ -88,35 +93,50 @@ async function refreshList(): Promise<void>
       continue;
     }
 
-    dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
-
-    if (!dump.Name)
+    promises.push(new Promise<Braindump>(async resolve =>
     {
-      dump.Name = Constants.DEFAULT_BRAINDUMP_NAME;
+      dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
+
+      if (!dump.Name)
+      {
+        dump.Name = Constants.DEFAULT_BRAINDUMP_NAME;
+      }
+
+      if (dump.Notes && dump.Notes.length !== 0)
+      {
+        dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
+      }
+
+      if
+      (
+          dump.Name
+          &&
+          (
+              !searchEnabled
+              ||
+              (
+                  dump.Name.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+                  ||
+                  dump.Notes.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+              )
+          )
+      )
+      {
+        return resolve(dump as Braindump);
+      }
+
+      return resolve(emptyDump as Braindump);
+    }));
+  }
+
+  for (const dump of await Promise.all(promises))
+  {
+    if (!dump.Guid)
+    {
+      continue;
     }
 
-    if (dump.Notes && dump.Notes.length !== 0)
-    {
-      dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
-    }
-
-    if
-    (
-        dump.Name
-        &&
-        (
-            !searchEnabled
-            ||
-            (
-                dump.Name.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
-                ||
-                dump.Notes.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
-            )
-        )
-    )
-    {
-      braindumpStore.braindumps.push(dump);
-    }
+    braindumpStore.braindumps.push(dump);
   }
 
   refreshing.value = false;
@@ -265,9 +285,9 @@ function onClickClearSearch(): void
 
         </div>
 
-        <div v-if="braindumpStore.braindumps && braindumpStore.braindumps.length === 0">
+        <div v-if="!braindumpStore.braindumps || braindumpStore.braindumps.length === 0">
           <h2>
-            Empty. Start braindumpin' now!
+            {{ refreshing ? 'Loading...' : 'Empty. Start braindumpin\' now!' }}
           </h2>
         </div>
 

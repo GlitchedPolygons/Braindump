@@ -144,10 +144,6 @@ function setTheme(dark: boolean, persist: boolean = false)
 
       </div>
 
-      <div class="sidebar-toggler x">
-
-      </div>
-
     </div>
 
   </div>

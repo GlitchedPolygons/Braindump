@@ -25,6 +25,7 @@ let braindumpEditorRef = ref(null);
 let selectedMenuItem = ref(-1);
 let refreshing: boolean = false;
 let ready = ref(false);
+let sidebarVisible = ref(true);
 
 onMounted(() =>
 {
@@ -46,6 +47,15 @@ onMounted(() =>
 function onResizeWindow(): void
 {
   isDesktop.value = window.innerWidth >= 1200;
+
+  if (isDesktop.value === true)
+  {
+    showSidebar();
+  }
+  else
+  {
+    hideSidebar();
+  }
 }
 
 function refresh()
@@ -198,17 +208,24 @@ function onSelectedMenuItem(itemIndex: number): void
 
   if (!isDesktop.value)
   {
-    const sidebar: HTMLElement | null = document.getElementById("sidebar");
+    hideSidebar();
+  }
+}
 
-    if (!sidebar)
-    {
-      return;
-    }
+function showSidebar(): void
+{
+  sidebarVisible.value = true;
 
-    sidebar.classList.remove("active");
-    sidebar.classList.add("inactive");
+  document.querySelector('.sidebar-backdrop')?.remove();
 
-    document.querySelector(".sidebar-backdrop")?.remove();
+  if (!isDesktop.value)
+  {
+    const backdrop: HTMLDivElement = document.createElement("div");
+
+    backdrop.classList.add('sidebar-backdrop');
+    backdrop.addEventListener('click', hideSidebar);
+
+    document.body.appendChild(backdrop);
 
     const body: HTMLBodyElement | null = document.querySelector("body");
 
@@ -217,8 +234,29 @@ function onSelectedMenuItem(itemIndex: number): void
       return;
     }
 
-    body.style.overflowY = "auto";
+    body.style.overflowY = "hidden";
   }
+}
+
+function hideSidebar(): void
+{
+  if (isDesktop.value === true)
+  {
+    return;
+  }
+
+  sidebarVisible.value = false;
+
+  document.querySelector(".sidebar-backdrop")?.remove();
+
+  const body: HTMLBodyElement | null = document.querySelector("body");
+
+  if (!body)
+  {
+    return;
+  }
+
+  body.style.overflowY = "auto";
 }
 
 async function onClickCreateNewBraindump(): Promise<void>
@@ -270,18 +308,27 @@ async function openBraindump(dump: Braindump): Promise<void>
 
 <template>
 
-  <div id="sidebar">
+  <div id="sidebar"
+       :class="sidebarVisible === true ? 'active' : 'inactive'">
+
     <div class="sidebar-wrapper active">
+
       <div class="sidebar-header position-relative">
+
         <div class="d-flex justify-content-between align-items-center">
 
           <ThemeSwitcher :include-title-label="true" />
 
-          <div class="sidebar-toggler x">
+          <div class="sidebar-toggler x"
+               @click="hideSidebar">
+
             <a href="javascript:void(0);"
                class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
+
           </div>
+
         </div>
+
       </div>
 
       <div class="sidebar-menu">
@@ -457,10 +504,14 @@ async function openBraindump(dump: Braindump): Promise<void>
   <div id="main">
 
     <header class="mb-3">
+
       <a href="javascript:void(0);"
+         @click="showSidebar"
          class="burger-btn d-block d-xl-none">
+
         <i class="bi bi-justify fs-3"></i>
       </a>
+
     </header>
 
     <div class="page-heading">
