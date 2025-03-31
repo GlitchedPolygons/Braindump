@@ -2,26 +2,41 @@
         lang="ts">
 
 import {nextTick, onMounted, ref} from "vue";
+
 import {AES, aesKeyStore} from "@/aes.ts";
+
 import config from "@/assets/config.json";
+
 import {Braindump, braindumpStore} from "@/braindump.ts";
+
 import {
   deepClone,
   exportBraindump,
   getDateFromUnixTimestamp,
   getDateString,
   getDateTimeString,
-  getUnixTimestamp, refreshUserAccount
+  getUnixTimestamp,
+  refreshUserAccount,
+  splitIntoChunks
 } from "../util.ts";
+
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
 
 const aes: AES = new AES();
+
+const decryptionWorkerURL = new URL('@/cryptoworker.ts', import.meta.url);
 
 let search = ref('');
 
 let refreshing = ref(false);
 
 let refreshListDebounce: number | null = null;
+
+let decryptionWorkerCount: number = 2;
+
+let decryptedChunkCount: number = 0;
+
+let decryptedChunks: Array<Array<Braindump>> = [];
 
 defineEmits(['onSelectBraindump']);
 
@@ -70,76 +85,134 @@ async function refreshList(): Promise<void>
 
   const responseBodyEnvelope = await response.json();
 
-  if (!responseBodyEnvelope || responseBodyEnvelope.Type !== TypeNamesDTO.USER_DATA_REDUX_RESPONSE_DTO || !responseBodyEnvelope.Items || responseBodyEnvelope.Items.length === 0)
+  if (!responseBodyEnvelope || responseBodyEnvelope.Type !== TypeNamesDTO.USER_DATA_REDUX_RESPONSE_DTO)
   {
     alert('Failed to fetch braindumps from server. Please double-check your connection and try again...');
     refreshing.value = false;
     return;
   }
 
-  const searchEnabled: boolean = !!search.value && search.value.length !== 0;
-
   braindumpStore.braindumps = [];
   braindumpStore.workingOffline = false;
 
-  const emptyDump: Braindump = deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump;
-
-  let promises: Promise<Braindump>[] = [];
-
-  for (let dump of responseBodyEnvelope.Items)
+  if (!responseBodyEnvelope.Items || responseBodyEnvelope.Items.length === 0)
   {
-    if (dump.Name === Constants.BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME)
+    refreshing.value = false;
+    return;
+  }
+
+  if (window.Worker && config.EnableWebWorkerDecryption)
+  {
+    decryptedChunks = [];
+    decryptedChunkCount = 0;
+    decryptionWorkerCount = Math.min(navigator.hardwareConcurrency, responseBodyEnvelope.Items.length);
+
+    console.log(`Decrypting braindumps using ${decryptionWorkerCount} parallel web workers...`);
+
+    const chunks: Array<Array<Braindump>> = splitIntoChunks([...responseBodyEnvelope.Items], decryptionWorkerCount);
+
+    for (let i = 0; i < chunks.length; ++i)
     {
-      continue;
-    }
-
-    promises.push(new Promise<Braindump>(async resolve =>
-    {
-      dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
-
-      if (!dump.Name)
-      {
-        dump.Name = Constants.DEFAULT_BRAINDUMP_NAME;
-      }
-
-      if (dump.Notes && dump.Notes.length !== 0)
-      {
-        dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
-      }
-
-      if
+      const decryptionWorker = new window.Worker
       (
-          dump.Name
-          &&
-          (
-              !searchEnabled
-              ||
-              (
-                  dump.Name.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
-                  ||
-                  dump.Notes.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
-              )
-          )
-      )
+          decryptionWorkerURL,
+          {
+            type: 'module'
+          }
+      );
+
+      decryptionWorker.onmessage = onDecryptionFinished;
+
+      decryptionWorker.postMessage
+      ({
+        chunkIndex: i,
+        search: search.value,
+        aesKey: deepClone(aesKeyStore.aesKey),
+        dumps: deepClone(chunks[i])
+      });
+    }
+  }
+  else
+  {
+    let promises: Promise<Braindump>[] = [];
+
+    for (let dump of responseBodyEnvelope.Items)
+    {
+      if (dump.Name === Constants.BRAINDUMP_ENCRYPTED_AES_KEY_ENTRY_NAME)
       {
-        return resolve(dump as Braindump);
+        continue;
       }
 
-      return resolve(emptyDump as Braindump);
-    }));
-  }
+      promises.push(new Promise<Braindump>(async resolve =>
+      {
+        dump.Name = await aes.decryptString(dump.Name, aesKeyStore.aesKey);
 
-  for (const dump of await Promise.all(promises))
-  {
-    if (!dump.Guid)
-    {
-      continue;
+        if (!dump.Name)
+        {
+          dump.Name = Constants.DEFAULT_BRAINDUMP_NAME;
+        }
+
+        if (dump.Notes && dump.Notes.length !== 0)
+        {
+          dump.Notes = await aes.decryptString(dump.Notes, aesKeyStore.aesKey);
+        }
+
+        const searchEnabled: boolean = !!search.value && search.value.length !== 0;
+
+        if
+        (
+            dump.Name
+            &&
+            (
+                !searchEnabled
+                ||
+                (
+                    dump.Name.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+                    ||
+                    dump.Notes.toLowerCase().replace(' ', '').includes(search.value.toLowerCase())
+                )
+            )
+        )
+        {
+          return resolve(dump as Braindump);
+        }
+
+        return resolve(deepClone(Constants.DEFAULT_BRAINDUMP) as Braindump);
+      }));
     }
 
-    braindumpStore.braindumps.push(dump);
-  }
+    for (const dump of await Promise.all(promises))
+    {
+      if (!dump.Guid)
+      {
+        continue;
+      }
 
-  refreshing.value = false;
+      braindumpStore.braindumps.push(dump);
+    }
+
+    refreshing.value = false;
+  }
+}
+
+function onDecryptionFinished(e: MessageEvent<any>): void
+{
+  ++decryptedChunkCount;
+
+  decryptedChunks[e.data.chunkIndex] = e.data.dumps;
+
+  if (decryptedChunkCount === decryptionWorkerCount)
+  {
+    for (let i = 0; i < decryptionWorkerCount; ++i)
+    {
+      for (let ii = 0; ii < decryptedChunks[i].length; ii++)
+      {
+        braindumpStore.braindumps.push(decryptedChunks[i][ii]);
+      }
+    }
+
+    refreshing.value = false;
+  }
 }
 
 function onClickExport(clickEvent: Event, dump: Braindump): void

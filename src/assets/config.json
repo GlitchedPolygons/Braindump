@@ -1,4 +1,5 @@
 {
+  "EnableWebWorkerDecryption": false,
   "BackendBaseURL": "https://api.glitchedpolygons.com/content-dump",
   "FrontendBaseURL": "https://braindump.glitchedpolygons.com",
   "LoginLogoURL": "https://api.files.glitchedpolygons.com/api/v1/files/brain-256x256.png",

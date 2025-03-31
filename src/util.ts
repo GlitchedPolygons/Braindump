@@ -270,3 +270,15 @@ export function pageCountFromTotal(totalCount: number, pageSize: number): number
 {
     return Math.floor((totalCount + (pageSize - 1)) / pageSize);
 }
+
+export function splitIntoChunks<T>(array: Array<T>, chunkCount: number): Array<Array<T>>
+{
+    let chunkBuffer: Array<Array<T>> = [];
+
+    for (let i: number = chunkCount; i > 0; --i)
+    {
+        chunkBuffer.push(array.splice(0, Math.ceil(array.length / i)));
+    }
+
+    return chunkBuffer;
+}
