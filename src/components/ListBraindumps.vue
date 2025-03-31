@@ -1,7 +1,7 @@
 <script setup
         lang="ts">
 
-import {nextTick, onMounted, ref} from "vue";
+import {nextTick, onMounted, onUnmounted, ref} from "vue";
 
 import {AES, aesKeyStore} from "@/aes.ts";
 
@@ -28,6 +28,8 @@ const decryptionWorkerURL = new URL('@/cryptoworker.ts', import.meta.url);
 
 let search = ref('');
 
+let lastOnWindowFocus: number = 0;
+
 let refreshing = ref(false);
 
 let refreshListDebounce: number | null = null;
@@ -40,7 +42,28 @@ let decryptedChunks: Array<Array<Braindump>> = [];
 
 defineEmits(['onSelectBraindump']);
 
-onMounted(refreshList);
+onMounted(() =>
+{
+  lastOnWindowFocus = getUnixTimestamp() - 1;
+
+  refreshList();
+
+  window.addEventListener('focus', onWindowFocus);
+});
+
+onUnmounted(() => window.removeEventListener('focus', onWindowFocus));
+
+function onWindowFocus(): void
+{
+  const utcNow: number = getUnixTimestamp();
+
+  if (utcNow - lastOnWindowFocus > 64)
+  {
+    onChangedSearchTerm();
+  }
+
+  lastOnWindowFocus = utcNow;
+}
 
 function onChangedSearchTerm()
 {
@@ -327,11 +350,11 @@ function onClickClearSearch(): void
           <div class="card-body braindump-list-entry"
                @click="$emit('onSelectBraindump', dump)">
 
-            <span>
+            <span class="unselectable">
               {{
                 dump.Name
               }}<br v-if="dump.Notes" />
-              <span class="braindump-notes">
+              <span class="braindump-notes unselectable">
               {{
                   dump.Notes ? `\n\n${dump.Notes}` : ''
                 }}

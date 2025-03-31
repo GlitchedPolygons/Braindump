@@ -281,7 +281,8 @@ html[data-bs-theme=dark] p {
 }
 
 .checkboxes-buttons {
-    margin-bottom: 8px;
+    margin-top: 13.37px;
+    margin-bottom: 16px;
     display: flex;
     gap: 12px;
 }

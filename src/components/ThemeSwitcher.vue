@@ -4,6 +4,7 @@
 import {onMounted, reactive, type Ref, ref} from "vue";
 import {LocalStorageKeys} from "@/constants.ts";
 import config from "@/assets/config.json";
+import {setTheme} from "@/util.ts";
 
 let logoSrc = ref('');
 let darkTheme: Ref<boolean, boolean> = ref(true);
@@ -21,9 +22,9 @@ onMounted(() =>
   {
     const mediaQuery: MediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
 
-    mediaQuery.addEventListener("change", (e) => setTheme(e.matches));
-
     storedThemePreference = mediaQuery.matches ? 'dark' : 'light';
+
+    mediaQuery.addEventListener("change", (e) => setTheme(e.matches));
   }
 
   darkTheme.value = storedThemePreference === 'dark';
@@ -36,27 +37,6 @@ onMounted(() =>
 function onSwitchTheme()
 {
   setTheme(darkTheme.value, true);
-}
-
-function setTheme(dark: boolean, persist: boolean = false)
-{
-  const theme: string =
-      dark
-          ? 'dark'
-          : 'light';
-
-  document.body.classList.add(theme);
-  document.documentElement.setAttribute('data-bs-theme', theme);
-
-  if (persist)
-  {
-    localStorage.setItem(LocalStorageKeys.THEME, theme);
-  }
-
-  if ((window as any).onChangedTheme)
-  {
-    (window as any).onChangedTheme(theme);
-  }
 }
 
 </script>

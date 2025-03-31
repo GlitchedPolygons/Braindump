@@ -6,15 +6,19 @@ import Login from "@/components/Login.vue";
 import Braindump from "@/components/Braindump.vue";
 
 import {onMounted, ref} from "vue";
-import {TypeNamesDTO, LocalStorageKeys, EndpointURLs, Constants} from "@/constants.ts";
-import {getUnixTimestamp, logout} from "@/util.ts";
 import {braindumpStore} from "@/braindump.ts";
+import {getUnixTimestamp, logout} from "@/util.ts";
+import {TypeNamesDTO, LocalStorageKeys, EndpointURLs, Constants} from "@/constants.ts";
 
+let refreshAuthTokenScheduledTask: number | null = null;
 let lastAuthTokenRefreshUTC: number = 0;
+let lastOnWindowFocus: number = 0;
 let showLoginPage = ref(true);
 
 onMounted(() =>
 {
+  lastOnWindowFocus = getUnixTimestamp() - 1;
+
   lastAuthTokenRefreshUTC = Number.parseInt(localStorage.getItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC) ?? '0');
 
   if (isNaN(lastAuthTokenRefreshUTC))
@@ -31,9 +35,45 @@ onMounted(() =>
 
   showLoginPage.value = isLoginRequired();
 
+  window.onfocus = onWindowFocus;
+  document.onvisibilitychange = onWindowFocus;
+
   refreshAuthToken();
 
-  setInterval
+  setupRefreshAuthTokenScheduledTask();
+
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js', 'vktDQfr/Ikhrtti/FA+u5LohNzPpFSlhp9Xj+rER/Vs=');
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/compiled/js/app.js', 'l8rWVyz/sArb+OzMOB2mU9LHrvbrOPCJEsnIyYbC8Gk=');
+  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/apexcharts/apexcharts.min.js', '+cagC7gYBHDzF6s5VmZnJFj3CZZYAb3ofFP6Qdv7k7E=');
+});
+
+function onWindowFocus(): void
+{
+  if (document.hidden)
+  {
+    return;
+  }
+
+  refreshAuthToken();
+
+  const utcNow: number = getUnixTimestamp();
+
+  if (utcNow - lastOnWindowFocus > 256)
+  {
+    setupRefreshAuthTokenScheduledTask();
+  }
+
+  lastOnWindowFocus = utcNow;
+}
+
+function setupRefreshAuthTokenScheduledTask(): void
+{
+  if (refreshAuthTokenScheduledTask !== null)
+  {
+    window.clearInterval(refreshAuthTokenScheduledTask);
+  }
+
+  refreshAuthTokenScheduledTask = window.setInterval
   (
       () =>
       {
@@ -41,11 +81,7 @@ onMounted(() =>
       },
       1024 * 8
   );
-
-  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js', 'vktDQfr/Ikhrtti/FA+u5LohNzPpFSlhp9Xj+rER/Vs=');
-  loadExternalScript('https://mazer-template.pages.dev/demo/assets/compiled/js/app.js', 'l8rWVyz/sArb+OzMOB2mU9LHrvbrOPCJEsnIyYbC8Gk=');
-  loadExternalScript('https://mazer-template.pages.dev/demo/assets/extensions/apexcharts/apexcharts.min.js', '+cagC7gYBHDzF6s5VmZnJFj3CZZYAb3ofFP6Qdv7k7E=');
-});
+}
 
 function loadExternalScript(url: string, sha256sumBase64: string = '')
 {
@@ -74,16 +110,6 @@ function loadExternalScript(url: string, sha256sumBase64: string = '')
 
   document.head.appendChild(scriptElement);
 }
-
-document.onvisibilitychange = () =>
-{
-  if (document.hidden)
-  {
-    return;
-  }
-
-  refreshAuthToken();
-};
 
 function isLoginRequired(): boolean
 {

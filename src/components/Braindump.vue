@@ -16,6 +16,7 @@ import {type Braindump, braindumpStore} from "@/braindump.ts";
 import ListBraindumps from "@/components/ListBraindumps.vue";
 import ListFiles from "@/components/ListFiles.vue";
 import OfflineScratchpad from "@/components/OfflineScratchpad.vue";
+import packageVersion from '../../package.json';
 
 const aes: AES = new AES();
 const year: number = new Date().getFullYear();
@@ -493,6 +494,9 @@ async function openBraindump(dump: Braindump): Promise<void>
             </p>
           </div>
           <hr />
+
+          <small class="unselectable version-label"
+                 v-if="packageVersion && packageVersion.version">v{{ packageVersion.version }}</small>
         </div>
 
       </div>
@@ -606,6 +610,11 @@ hr {
   .page-heading {
     margin-bottom: 0 !important;
   }
+}
+
+.version-label {
+  margin-left: 16px;
+  opacity: 42%;
 }
 
 </style>

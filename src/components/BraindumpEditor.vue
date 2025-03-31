@@ -14,7 +14,7 @@ import {
   getDateFromUnixTimestamp,
   getDateTimeString,
   getUnixTimestamp,
-  logout,
+  logout, setTheme,
   toggleCheckboxInMarkdown
 } from "@/util.ts";
 
@@ -22,6 +22,8 @@ import bdConfig from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
 
 type ImgUploadCallback = (url: string) => void;
+
+let lastOnWindowFocus: number = 0;
 
 let editing = ref(true);
 
@@ -72,6 +74,8 @@ config({
 
 onMounted(() =>
 {
+  lastOnWindowFocus = getUnixTimestamp() - 1;
+
   nameEncryptionTask = notesEncryptionTask = markdownEncryptionTask = null;
 
   hideHelpText.value = localStorage.getItem(LocalStorageKeys.HIDE_EDITOR_HELP_TEXT) === 'true';
@@ -90,7 +94,7 @@ onMounted(() =>
     state.theme = theme;
   };
 
-  (window as any).onChangedTheme(localStorage.getItem(LocalStorageKeys.THEME));
+  state.theme = localStorage.getItem(LocalStorageKeys.THEME) ?? (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light');
 });
 
 function onClickHideHelpText(): void
@@ -271,6 +275,11 @@ function onClickEdit(): void
 
 function onClickDone(): void
 {
+  if (edited?.value?.Name === Constants.DEFAULT_BRAINDUMP_NAME && !confirm(`Are you sure you want to name your Braindump "${edited?.value?.Name ?? Constants.DEFAULT_BRAINDUMP_NAME}"?`))
+  {
+    return;
+  }
+
   editing.value = false;
 
   if (!edited.value.Guid)
@@ -546,6 +555,35 @@ function onClickReturnToList(): void
 
             <div class="card-body">
 
+              <MdEditor v-model="edited.Data"
+                        :id="'md-editor'"
+                        :preview="false"
+                        :maxLength="1048576"
+                        :language="'en-US'"
+                        :toolbars="Constants.TOOLBAR as ToolbarNames[]"
+                        :theme="state.theme as Themes"
+                        :noUploadImg="braindumpStore.workingOffline"
+                        @onUploadImg="onUploadImg"
+                        @onChange="onChangedMarkdown" />
+
+              <div class="checkboxes-buttons">
+
+                <button type="button"
+                        @click="onClickUntickAllCheckboxes"
+                        class="btn btn-secondary bdmp-button edit-button">
+                  <i class="bi bi-square"></i>
+                  Untick all checkboxes
+                </button>
+
+                <button type="button"
+                        @click="onClickTickAllCheckboxes"
+                        class="btn btn-secondary bdmp-button edit-button">
+                  <i class="bi bi-check2-square"></i>
+                  Tick all checkboxes
+                </button>
+
+              </div>
+
               <div class="form-group my-2">
 
                 <label for="name"
@@ -589,36 +627,7 @@ function onClickReturnToList(): void
 
               </div>
 
-              <div class="checkboxes-buttons">
-
-                <button type="button"
-                        @click="onClickUntickAllCheckboxes"
-                        class="btn btn-secondary bdmp-button edit-button">
-                  <i class="bi bi-square"></i>
-                  Untick all checkboxes
-                </button>
-
-                <button type="button"
-                        @click="onClickTickAllCheckboxes"
-                        class="btn btn-secondary bdmp-button edit-button">
-                  <i class="bi bi-check2-square"></i>
-                  Tick all checkboxes
-                </button>
-
-              </div>
-
-              <MdEditor v-model="edited.Data"
-                        :id="'md-editor'"
-                        :preview="false"
-                        :maxLength="1048576"
-                        :language="'en-US'"
-                        :toolbars="Constants.TOOLBAR as ToolbarNames[]"
-                        :theme="state.theme as Themes"
-                        :noUploadImg="braindumpStore.workingOffline"
-                        @onUploadImg="onUploadImg"
-                        @onChange="onChangedMarkdown" />
-
-              <div class="bottom-spacer"></div>
+              <!--              <div class="bottom-spacer"></div>  -->
 
               <div class="form-group my-2 d-flex justify-content-end action-buttons">
 
@@ -702,7 +711,7 @@ function onClickReturnToList(): void
 
   <button class="btn btn-sm btn-outline-secondary bdmp-button"
           @click="onClickReturnToList"
-          style="margin-top: 8px;"
+          style="margin-top: 9px;"
           type="button">
     ❮❮ &nbsp; Return to list
   </button>
@@ -744,7 +753,7 @@ function onClickReturnToList(): void
   .card-body, .card-header {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 16px !important;
   }
 
   .save-button,
@@ -800,6 +809,10 @@ function onClickReturnToList(): void
 
 details {
   margin-bottom: 8px;
+}
+
+#md-editor {
+  margin-top: -16px;
 }
 
 </style>

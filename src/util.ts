@@ -80,6 +80,11 @@ export function containsNumberCharacters(string: string): boolean
     return /[0-9]/.test(string);
 }
 
+export function containsSpecialCharacters(string: string): boolean
+{
+    return /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(string);
+}
+
 export function isPasswordShitty(password: string): boolean
 {
     if (!password)
@@ -87,7 +92,7 @@ export function isPasswordShitty(password: string): boolean
         return true;
     }
 
-    if (password.length < 7)
+    if (password.length < Constants.MIN_PASSWORD_LENGTH)
     {
         return true;
     }
@@ -103,6 +108,11 @@ export function isPasswordShitty(password: string): boolean
     }
 
     if (!containsNumberCharacters(password))
+    {
+        return true;
+    }
+
+    if (!containsSpecialCharacters(password))
     {
         return true;
     }
@@ -191,6 +201,27 @@ export function deepClone<T>(object: T): T
     console.warn('structuredClone function not available in this environment; reverting to JSON-based deep clone heuristics...');
 
     return JSON.parse(JSON.stringify(object));
+}
+
+export function setTheme(dark: boolean, persist: boolean = false)
+{
+    const theme: string =
+        dark
+            ? 'dark'
+            : 'light';
+
+    document.body.classList.add(theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
+
+    if (persist)
+    {
+        localStorage.setItem(LocalStorageKeys.THEME, theme);
+    }
+
+    if ((window as any).onChangedTheme)
+    {
+        (window as any).onChangedTheme(theme);
+    }
 }
 
 export function bytesToFileSizeString(bytes: number): string

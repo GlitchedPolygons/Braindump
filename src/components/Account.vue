@@ -55,7 +55,14 @@ async function onClickChangePassword(): Promise<void>
 
   if (isPasswordShitty(newPassword.value))
   {
-    alert('New password is too weak!\n\nPlease set a password that is at least 7 characters long and contains:\n\n• at least 1 UPPERCASE letter\n• at least 1 lowercase letter\n• at least 1 number.');
+    alert(`New password is too weak!
+
+Please set a password that is at least ${Constants.MIN_PASSWORD_LENGTH} characters long and contains:
+
+• at least 1 UPPERCASE letter
+• at least 1 lowercase letter
+• at least 1 special symbol
+• at least 1 number.`);
     return;
   }
 
