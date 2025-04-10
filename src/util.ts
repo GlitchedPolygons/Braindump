@@ -26,15 +26,15 @@ export function getDateString(date: Date): string
     return `${date.getDate()}. ${Constants.MONTHS[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-export function getDateTimeString(date: Date): string
+export function getDateTimeString(date: Date, utc: boolean = false): string
 {
-    const year: number = date.getFullYear();
-    const monthIndex: number = date.getMonth();
-    const day: number = date.getDate();
-    const minutes: number = date.getMinutes();
-    const hours: number = date.getHours();
+    const year: number = utc ? date.getUTCFullYear() : date.getFullYear();
+    const monthIndex: number = utc ? date.getUTCMonth() : date.getMonth();
+    const day: number = utc ? date.getUTCDate() : date.getDate();
+    const minutes: number = utc ? date.getUTCMinutes() : date.getMinutes();
+    const hours: number = utc ? date.getUTCHours() : date.getHours();
 
-    return `${day}. ${Constants.MONTHS[monthIndex]} ${year}, ${hours < 10 ? `0${hours}` : hours}:${minutes < 10 ? `0${minutes}` : minutes} (UTC)`;
+    return `${day}. ${Constants.MONTHS[monthIndex]} ${year}, ${hours < 10 ? `0${hours}` : hours}:${minutes < 10 ? `0${minutes}` : minutes}${utc ? ' (UTC)' : ''}`;
 }
 
 export function logout(reload: boolean = true): void
