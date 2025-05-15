@@ -12,6 +12,8 @@ declare var bootstrap: any;
 
 let logoSrc = ref('');
 
+let passwordHashStored: Ref<boolean, boolean> = ref(false);
+
 let loggingIn: Ref<boolean, boolean> = ref(false);
 
 let saveDefibrillatorToken: boolean = false;
@@ -34,6 +36,13 @@ onMounted(async () =>
   }
 
   logoSrc.value = config.LoginLogoURL;
+
+  const pwh = localStorage.getItem(LocalStorageKeys.PASSWORD_HASH);
+
+  if (pwh && pwh.length > 0)
+  {
+    passwordHashStored.value = true;
+  }
 });
 
 function onChangeSaveDefibrillatorToken()
@@ -66,7 +75,7 @@ async function login()
   (
       `${config.BackendBaseURL}${EndpointURLs.LOGIN}`,
       requestContext
-  ).then(response =>
+  ).then(async response =>
   {
     if (!response.ok)
     {
@@ -77,7 +86,9 @@ async function login()
 
     onChangeSaveDefibrillatorToken();
 
-    handleLoginResponse(response, passwordHash);
+    const responseBodyEnvelope = await response.json();
+
+    handleLoginResponse(responseBodyEnvelope, passwordHash);
 
   }).catch(error =>
   {
@@ -99,45 +110,42 @@ function onClickWorkOffline(): void
   braindumpStore.workingOffline = true;
 }
 
-function handleLoginResponse(response: Response, passwordHash: string | null = null)
+function handleLoginResponse(responseBodyEnvelope: any, passwordHash: string | null = null)
 {
-  response.json().then((responseBodyEnvelope: any) =>
+  setTimeout(() => loggingIn.value = false, 1024);
+
+  if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)
   {
-    setTimeout(() => loggingIn.value = false, 1024);
+    const loginResponseDto = responseBodyEnvelope.Items[0];
 
-    if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)
+    const utcNow: number = getUnixTimestamp();
+
+    if (passwordHash)
     {
-      const loginResponseDto = responseBodyEnvelope.Items[0];
-
-      const utcNow: number = getUnixTimestamp();
-
-      if (passwordHash)
-      {
-        localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
-      }
-
-      localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
-      localStorage.setItem(LocalStorageKeys.LAST_USERNAME, username.value);
-      localStorage.setItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC, utcNow.toString());
-
-      if (saveDefibrillatorToken)
-      {
-        localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
-      }
-
-      braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
-
-      emit('onLoginSuccessful');
-
-      braindumpStore.workingOffline = false;
-
-      refreshUserAccount();
+      localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
     }
-    else
+
+    localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
+    localStorage.setItem(LocalStorageKeys.LAST_USERNAME, username.value);
+    localStorage.setItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC, utcNow.toString());
+
+    if (saveDefibrillatorToken)
     {
-      onLoginFailed();
+      localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
     }
-  });
+
+    braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
+
+    emit('onLoginSuccessful');
+
+    braindumpStore.workingOffline = false;
+
+    refreshUserAccount();
+  }
+  else
+  {
+    onLoginFailed();
+  }
 }
 
 async function loginUsingPasskey(): Promise<void>
@@ -152,10 +160,7 @@ async function loginUsingPasskey(): Promise<void>
   try
   {
     const response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_LOGIN}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      method: 'POST'
     });
 
     if (!response.ok)
@@ -207,7 +212,7 @@ async function loginUsingPasskey(): Promise<void>
       }
     };
 
-    const verificationResponse = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_LOGIN_VERIFICATION}`, {
+    const verificationResponse: Response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_LOGIN_VERIFICATION}`, {
       method: 'POST',
       body: JSON.stringify(assertionResponse),
       headers: {
@@ -222,7 +227,11 @@ async function loginUsingPasskey(): Promise<void>
       return;
     }
 
-    handleLoginResponse(verificationResponse);
+    onChangeSaveDefibrillatorToken();
+
+    const verificationResponseBodyEnvelope = await verificationResponse.json();
+
+    handleLoginResponse(verificationResponseBodyEnvelope);
   }
   catch (e)
   {
@@ -355,6 +364,7 @@ async function loginUsingPasskey(): Promise<void>
                       style="max-width: 64px;"
                       type="button"
                       :disabled="loggingIn"
+                      v-if="passwordHashStored"
                       v-on:click="loginUsingPasskey();">
                 <span class="bi bi-key-fill"></span>
               </button>
