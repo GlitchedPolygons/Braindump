@@ -43,7 +43,6 @@ export function logout(reload: boolean = true): void
     localStorage.removeItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN);
     localStorage.removeItem(LocalStorageKeys.SAVE_DEFIBRILLATOR_TOKEN);
     localStorage.removeItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC);
-    localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
 
     if (!reload)
     {

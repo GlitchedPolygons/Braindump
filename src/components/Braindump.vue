@@ -152,6 +152,7 @@ function refresh()
         catch (e)
         {
           console.error('Fatal error! Failed to fetch and/or decrypt the Braindump AES-256 encrypted key from the backend.');
+          localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
           logout();
         }
       }
@@ -182,6 +183,7 @@ function refresh()
         if (!aesKeyDataEntryCreationResponse.ok)
         {
           console.error('Fatal error! Failed to generate and save Braindump AES-256 key in the proper remote data entry.');
+          localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
           logout();
         }
 
@@ -199,6 +201,7 @@ function refresh()
   }).catch(error =>
   {
     ready.value = false;
+    localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
     logout();
   });
 }

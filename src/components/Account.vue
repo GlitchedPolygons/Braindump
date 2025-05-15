@@ -144,6 +144,7 @@ Please set a password that is at least ${Constants.MIN_PASSWORD_LENGTH} characte
     }
 
     alert('Password modified successfully. Please login again using your new, super fresh password! :D');
+    localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
     logout();
   }
   catch (e)
@@ -663,6 +664,7 @@ async function onClickDeleteAccount(): Promise<void>
   }
 
   alert('User account has been deleted successfully.');
+  localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
   logout();
 }
 
