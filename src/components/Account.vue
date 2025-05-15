@@ -1069,6 +1069,12 @@ async function onClickDeleteAccount(): Promise<void>
           <div class="card-body"
                v-if="braindumpStore.user?.TotpEnabled === true">
 
+            <p>
+              <a target="_blank"
+                 href="https://www.passkeys.com/what-are-passkeys">Passkeys</a> are a great and modern way to harden your account's security whilst going passwordless.<br>
+              Please note that Braindump's passkey login is only available after having logged in <i>traditionally</i> (by entering your username and password) at least once, since everything is client-side encrypted using your password.
+            </p>
+
             <div v-if="braindumpStore.user.PasskeysJson">
 
               <ul class="list-group"
