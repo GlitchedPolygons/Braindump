@@ -1,9 +1,24 @@
 import {reactive} from "vue";
 
-declare type BraindumpRedux = {
+export declare type BraindumpRedux = {
     Guid: string,
     Name: string,
     Notes: string
+}
+
+export declare type BraindumpPasskey = {
+    Guid: string,
+    AuthenticatorAttestationGuid: string,
+    UserName: string,
+    DisplayName: string,
+    SignCounter: number,
+    UserIdBase64: string,
+    PublicKeyBase64: string,
+    CredentialIdBase64: string,
+    LastUsedPlatformInfo: string,
+    CreationTimestampUTC: number,
+    LastUsageTimestampUTC: number,
+    LastModificationTimestampUTC: number
 }
 
 export class Braindump {

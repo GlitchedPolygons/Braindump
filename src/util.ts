@@ -43,7 +43,6 @@ export function logout(reload: boolean = true): void
     localStorage.removeItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN);
     localStorage.removeItem(LocalStorageKeys.SAVE_DEFIBRILLATOR_TOKEN);
     localStorage.removeItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC);
-    localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
 
     if (!reload)
     {
@@ -312,4 +311,45 @@ export function splitIntoChunks<T>(array: Array<T>, chunkCount: number): Array<A
     }
 
     return chunkBuffer;
+}
+
+export function encodeBase64Url(arrayBuffer: ArrayBuffer): string
+{
+    const bytes: Uint8Array = new Uint8Array(arrayBuffer);
+    const len: number = bytes.length;
+
+    let base64 = '';
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+    for (let i = 0; i < len; i += 3)
+    {
+        base64 += chars[bytes[i] >> 2];
+        base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+        base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+        base64 += chars[bytes[i + 2] & 63];
+    }
+
+    if ((len % 3) === 2)
+    {
+        base64 = base64.substring(0, base64.length - 1);
+    }
+    else if (len % 3 === 1)
+    {
+        base64 = base64.substring(0, base64.length - 2);
+    }
+
+    return base64;
+}
+
+export function decodeBase64Url(encodedString: string): ArrayBuffer
+{
+    encodedString = encodedString.replace(/-/g, '+').replace(/_/g, '/');
+
+    while (encodedString.length % 4)
+    {
+        encodedString += '=';
+    }
+
+    return Uint8Array.from(window.atob(encodedString), v => v.charCodeAt(0));
 }

@@ -5,9 +5,18 @@ import {onMounted, ref} from "vue";
 import QrcodeVue from "qrcode.vue";
 import config from "@/assets/config.json";
 import {AES, aesKeyStore} from "@/aes.ts";
-import {bytesToFileSizeString, isPasswordShitty, logout, refreshUserAccount, selectOnFocus, sha256} from "@/util.ts";
+import {
+  bytesToFileSizeString,
+  decodeBase64Url,
+  encodeBase64Url, getDateFromUnixTimestamp, getDateTimeString,
+  isPasswordShitty,
+  logout,
+  refreshUserAccount,
+  selectOnFocus,
+  sha256
+} from "@/util.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {braindumpStore} from "@/braindump.ts";
+import {type BraindumpPasskey, braindumpStore} from "@/braindump.ts";
 import StorageQuotaIndicator from "@/components/StorageQuotaIndicator.vue";
 
 let busy = ref(false);
@@ -31,6 +40,8 @@ let totpSecretQR = ref('');
 let copyAnim: number;
 
 const aes = new AES();
+
+const textEncoder: TextEncoder = new TextEncoder();
 
 onMounted(refreshUserAccount);
 
@@ -133,6 +144,7 @@ Please set a password that is at least ${Constants.MIN_PASSWORD_LENGTH} characte
     }
 
     alert('Password modified successfully. Please login again using your new, super fresh password! :D');
+    localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
     logout();
   }
   catch (e)
@@ -428,6 +440,187 @@ function onClickCopyTotpSecret(): void
   setTimeout(() => alert('2FA secret has been copied to clipboard.\n\nCAREFUL! Do not send this to anyone.\n\nBack it up somewhere safe (maybe in a password manager like Bitwarden?)'), 64);
 }
 
+async function onClickRegisterNewPasskey(): Promise<void>
+{
+  if (busy.value === true)
+  {
+    return;
+  }
+
+  if (braindumpStore.user?.TotpEnabled === false)
+  {
+    alert('Passkeys are only allowed when 2FA is enabled!');
+    return;
+  }
+
+  const unsupportedErrorMessage: string = 'Passkeys via WebAuthN are not supported on this browser.';
+
+  const publicKeyCredentialSupported: Boolean = typeof PublicKeyCredential !== 'undefined';
+
+  if (!publicKeyCredentialSupported)
+  {
+    alert(unsupportedErrorMessage);
+    return;
+  }
+
+  const displayName: string | null = prompt('Give your passkey a recognizable display name, like for example your username combined with the name of your password manager (the one used for generating the passkey) or the authentication device.', '');
+
+  if (!displayName)
+  {
+    alert(displayName === null ? 'Passkey registration cancelled.' : 'Please enter a display name for your passkey.');
+    return;
+  }
+
+  if (displayName.length > 64)
+  {
+    alert('Display name too long.');
+    return;
+  }
+
+  busy.value = true;
+
+  const requestContext = {
+    method: 'POST',
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`,
+    }
+  };
+
+  const displayNameBase64URL: string = encodeBase64Url(textEncoder.encode(displayName));
+
+  const response = await fetch
+  (
+      `${config.BackendBaseURL}${EndpointURLs.PASSKEYS}?displayNameBase64URL=${displayNameBase64URL}`,
+      requestContext
+  );
+
+  if (!response.ok)
+  {
+    alert(`Passkey registration failed. Error: ${response.status} (${response.statusText})`);
+    busy.value = false;
+    return;
+  }
+
+  const responseBodyEnvelope = await response.json();
+
+  if (!responseBodyEnvelope.Items || responseBodyEnvelope.Items.length !== 1)
+  {
+    alert('Failed to initialize new passkey registration.');
+    busy.value = false;
+    return;
+  }
+
+  try
+  {
+    let credentialCreationContext = responseBodyEnvelope.Items[0];
+
+    credentialCreationContext.challenge = decodeBase64Url(credentialCreationContext.challenge);
+    credentialCreationContext.user.id = decodeBase64Url(credentialCreationContext.user.id);
+
+    const credential = await navigator.credentials.create({publicKey: credentialCreationContext}) as PublicKeyCredential;
+
+    if (!credential)
+    {
+      alert(unsupportedErrorMessage);
+      return;
+    }
+
+    const attestationResponse = {
+      id: credential.id,
+      rawId: encodeBase64Url(credential.rawId),
+      type: credential.type,
+      response: {
+        attestationObject: encodeBase64Url((credential.response as AuthenticatorAttestationResponse).attestationObject),
+        clientDataJSON: encodeBase64Url(credential.response.clientDataJSON)
+      }
+    };
+
+    const response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_REGISTER}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`
+      },
+      body: JSON.stringify(attestationResponse)
+    });
+
+    if (!response.ok)
+    {
+      alert('Failed to initialize new passkey registration.');
+      return;
+    }
+
+    await refreshUserAccount();
+  }
+  catch (e)
+  {
+    alert('Passkey registration cancelled or failed.');
+  }
+  finally
+  {
+    busy.value = false;
+  }
+}
+
+async function onClickRenamePasskey(passkey: BraindumpPasskey): Promise<void>
+{
+  const displayName: string | null = prompt('Give your passkey a fresh, new and recognizable display name, like for example your username combined with the name of your password manager (the one used for generating the passkey) or the authentication device.', '');
+
+  if (!displayName)
+  {
+    alert(displayName === null ? 'Passkey renaming cancelled.' : 'Please enter a new display name for your passkey.');
+    return;
+  }
+
+  if (displayName.length > 64)
+  {
+    alert('Display name too long.');
+    return;
+  }
+
+  const newDisplayNameBase64URL: string = encodeBase64Url(textEncoder.encode(displayName));
+
+  const response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS}/${passkey.Guid}?newDisplayNameBase64URL=${newDisplayNameBase64URL}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`
+    }
+  });
+
+  if (!response.ok)
+  {
+    alert('Failed to rename passkey.');
+    return;
+  }
+
+  await refreshUserAccount();
+}
+
+async function onClickDeletePasskey(passkey: BraindumpPasskey): Promise<void>
+{
+  if (!confirm(`Are you sure that you want to delete the passkey "${passkey.DisplayName}"?`))
+  {
+    return;
+  }
+
+  const response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS}/${passkey.Guid}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem(LocalStorageKeys.AUTH_TOKEN)}`
+    }
+  });
+
+  if (!response.ok)
+  {
+    alert('Failed to delete passkey.');
+    return;
+  }
+
+  await refreshUserAccount();
+}
+
 async function onClickDeleteAccount(): Promise<void>
 {
   if (busy.value === true)
@@ -471,6 +664,7 @@ async function onClickDeleteAccount(): Promise<void>
   }
 
   alert('User account has been deleted successfully.');
+  localStorage.removeItem(LocalStorageKeys.PASSWORD_HASH);
   logout();
 }
 
@@ -869,6 +1063,103 @@ async function onClickDeleteAccount(): Promise<void>
         <div class="card">
 
           <div class="card-header">
+            <h5 class="card-title">
+              Passkeys
+            </h5>
+          </div>
+
+          <div class="card-body"
+               v-if="braindumpStore.user?.TotpEnabled === true">
+
+            <p>
+              <a target="_blank"
+                 href="https://www.passkeys.com/what-are-passkeys">Passkeys</a> are a great and modern way to harden
+              your account's security whilst going passwordless.<br>
+              Please note that Braindump's passkey login is only available after having logged in <i>traditionally</i>
+              (by entering your username and password) at least once, since everything is client-side encrypted using
+              your password.
+            </p>
+
+            <div v-if="braindumpStore.user.PasskeysJson">
+
+              <ul class="list-group"
+                  v-for="passkey in JSON.parse(braindumpStore.user.PasskeysJson)">
+
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                  <span>
+                    {{
+                      passkey.DisplayName
+                    }}, last used: {{ getDateTimeString(getDateFromUnixTimestamp(passkey.LastUsageTimestampUTC), true) }}
+                  </span>
+
+                  <div class="passkeys-buttons">
+
+                    <span @click="onClickRenamePasskey(passkey)"
+                          class="badge bg-info badge-pill badge-round ms-1 unselectable"
+                          title="Change this passkey's display name">
+                      Rename
+                    </span>
+
+                    <span @click="onClickDeletePasskey(passkey)"
+                          class="badge bg-danger badge-pill badge-round ms-1 unselectable"
+                          title="Delete this passkey, making it immediately unavailable as an authentication method">
+                      Delete
+                    </span>
+
+                  </div>
+                </li>
+
+              </ul>
+
+            </div>
+            <div class="card-body"
+                 v-else>
+              <p>
+                No passkeys registered yet. More information available on: <a target="_blank"
+                                                                              href="https://passkeys.com">https://passkeys.com</a>
+              </p>
+            </div>
+
+            <div style="margin-top: 32px;"></div>
+
+            <div class="form-group my-2 d-flex justify-content-end">
+
+              <button type="button"
+                      :disabled="busy"
+                      @click="onClickRegisterNewPasskey"
+                      id="register-passkey-button"
+                      class="btn btn-success bdmp-button">
+                Register new passkey
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="card-body"
+               v-else>
+            <p>
+              <a target="_blank"
+                 href="https://www.passkeys.com/what-are-passkeys">FIDO2 passkeys</a> are only allowed for user accounts
+              with 2FA enabled.
+              <br><br>
+              If you wish to make use of passkey based login, please activate two-factor authentication first.
+              <br><br>
+              Disabling 2FA after registering one or more passkeys will not delete them, but rather ignore all passkey
+              based login attempts until 2FA is back on.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="col-lg-8">
+
+        <div class="card">
+
+          <div class="card-header">
 
             <h5 class="card-title">
               Delete Account
@@ -958,6 +1249,24 @@ async function onClickDeleteAccount(): Promise<void>
   justify-content: center;
   margin-top: 28px;
   margin-bottom: 32px;
+}
+
+html[data-bs-theme="dark"] .list-group {
+  --bs-list-group-border-color: rgba(193, 193, 193, 0.11);
+}
+
+.passkeys-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.passkeys-buttons > span {
+  min-width: 32px;
+  cursor: pointer;
+}
+
+.passkeys-buttons > span:hover {
+  filter: brightness(90%);
 }
 
 </style>
