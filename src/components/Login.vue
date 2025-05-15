@@ -6,7 +6,7 @@ import config from "@/assets/config.json";
 import {onMounted, type Ref, ref} from "vue";
 import {braindumpStore} from "@/braindump.ts";
 import {Constants, EndpointURLs, LocalStorageKeys, TypeNamesDTO} from "@/constants.ts";
-import {getUnixTimestamp, refreshUserAccount, selectOnFocus, sha256} from "@/util.ts";
+import {decodeBase64Url, encodeBase64Url, getUnixTimestamp, refreshUserAccount, selectOnFocus, sha256} from "@/util.ts";
 
 declare var bootstrap: any;
 
@@ -21,6 +21,8 @@ const password: Ref<string, string> = ref('');
 const totp: Ref<string, string> = ref('');
 
 const emit = defineEmits(['onLoginSuccessful']);
+
+const textEncoder: TextEncoder = new TextEncoder();
 
 onMounted(async () =>
 {
@@ -75,39 +77,8 @@ async function login()
 
     onChangeSaveDefibrillatorToken();
 
-    response.json().then(responseBodyEnvelope =>
-    {
-      setTimeout(() => loggingIn.value = false, 1024);
+    handleLoginResponse(response, passwordHash);
 
-      if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)
-      {
-        const loginResponseDto = responseBodyEnvelope.Items[0];
-
-        const utcNow: number = getUnixTimestamp();
-
-        localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
-        localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
-        localStorage.setItem(LocalStorageKeys.LAST_USERNAME, username.value);
-        localStorage.setItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC, utcNow.toString());
-
-        if (saveDefibrillatorToken)
-        {
-          localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
-        }
-
-        braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
-
-        emit('onLoginSuccessful');
-
-        braindumpStore.workingOffline = false;
-
-        refreshUserAccount();
-      }
-      else
-      {
-        onLoginFailed();
-      }
-    })
   }).catch(error =>
   {
     onLoginFailed();
@@ -128,6 +99,140 @@ function onClickWorkOffline(): void
   braindumpStore.workingOffline = true;
 }
 
+function handleLoginResponse(response: Response, passwordHash: string | null = null)
+{
+  response.json().then((responseBodyEnvelope: any) =>
+  {
+    setTimeout(() => loggingIn.value = false, 1024);
+
+    if (responseBodyEnvelope.Type === TypeNamesDTO.LOGIN_RESPONSE_DTO && responseBodyEnvelope.Items && responseBodyEnvelope.Items.length !== 0)
+    {
+      const loginResponseDto = responseBodyEnvelope.Items[0];
+
+      const utcNow: number = getUnixTimestamp();
+
+      if (passwordHash)
+      {
+        localStorage.setItem(LocalStorageKeys.PASSWORD_HASH, passwordHash);
+      }
+
+      localStorage.setItem(LocalStorageKeys.AUTH_TOKEN, loginResponseDto.Token);
+      localStorage.setItem(LocalStorageKeys.LAST_USERNAME, username.value);
+      localStorage.setItem(LocalStorageKeys.LAST_AUTH_TOKEN_REFRESH_UTC, utcNow.toString());
+
+      if (saveDefibrillatorToken)
+      {
+        localStorage.setItem(LocalStorageKeys.DEFIBRILLATOR_TOKEN, loginResponseDto.DefibrillatorToken);
+      }
+
+      braindumpStore.defibrillatorToken = loginResponseDto.DefibrillatorToken;
+
+      emit('onLoginSuccessful');
+
+      braindumpStore.workingOffline = false;
+
+      refreshUserAccount();
+    }
+    else
+    {
+      onLoginFailed();
+    }
+  });
+}
+
+async function loginUsingPasskey(): Promise<void>
+{
+  if (loggingIn.value)
+  {
+    return;
+  }
+
+  loggingIn.value = true;
+
+  try
+  {
+    const response = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_LOGIN}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok)
+    {
+      alert('Passkey authentication failed. Please login with your main credentials!');
+      return;
+    }
+
+    const responseBodyEnvelope = await response.json();
+
+    let options: any = responseBodyEnvelope.Items[0];
+
+    options.challenge = decodeBase64Url(options.challenge);
+
+    let assertion: any;
+
+    options.allowCredentials = options.allowCredentials.map((cred: any) => ({
+      ...cred,
+      id: decodeBase64Url(cred.id)
+    }));
+
+    const passkeyAuthFailedErrorMessage: string = 'Passkey authentication failed. Please login with your main credentials!';
+
+    try
+    {
+      assertion = await navigator.credentials.get({publicKey: options});
+    }
+    catch (e)
+    {
+      alert(passkeyAuthFailedErrorMessage);
+      return;
+    }
+
+    if (!assertion)
+    {
+      alert(passkeyAuthFailedErrorMessage);
+      return;
+    }
+
+    const assertionResponse = {
+      id: assertion.id,
+      rawId: encodeBase64Url(assertion.rawId),
+      type: assertion.type,
+      response: {
+        authenticatorData: encodeBase64Url(assertion.response.authenticatorData),
+        clientDataJSON: encodeBase64Url(assertion.response.clientDataJSON),
+        signature: encodeBase64Url(assertion.response.signature),
+        userHandle: assertion.response.userHandle ? encodeBase64Url(assertion.response.userHandle) : null
+      }
+    };
+
+    const verificationResponse = await fetch(`${config.BackendBaseURL}${EndpointURLs.PASSKEYS_LOGIN_VERIFICATION}`, {
+      method: 'POST',
+      body: JSON.stringify(assertionResponse),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-FIDO2-ChallengeBase64URL': encodeBase64Url(options.challenge)
+      }
+    });
+
+    if (!verificationResponse.ok)
+    {
+      alert('Passkey authentication failed. Please login with your main credentials!');
+      return;
+    }
+
+    handleLoginResponse(verificationResponse);
+  }
+  catch (e)
+  {
+    new bootstrap.Toast(document.getElementById('toast-login-failed')).show();
+  }
+  finally
+  {
+    loggingIn.value = false;
+  }
+}
 </script>
 
 <template>
@@ -236,12 +341,25 @@ function onClickWorkOffline(): void
 
             </div>
 
-            <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5"
-                    type="submit"
-                    :disabled="loggingIn || !username || !password"
-                    v-on:click="login();">
-              {{ loggingIn ? 'Logging in...' : 'Login' }}
-            </button>
+            <div style="display: flex; gap: 20px;">
+
+              <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5"
+                      type="submit"
+                      :disabled="loggingIn || !username || !password"
+                      v-on:click="login();">
+                {{ loggingIn ? 'Logging in...' : 'Login' }}
+              </button>
+
+              <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5"
+                      title="Login using a passkey"
+                      style="max-width: 64px;"
+                      type="button"
+                      :disabled="loggingIn"
+                      v-on:click="loginUsingPasskey();">
+                <span class="bi bi-key-fill"></span>
+              </button>
+
+            </div>
 
           </div>
 
