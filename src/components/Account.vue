@@ -1073,8 +1073,11 @@ async function onClickDeleteAccount(): Promise<void>
 
             <p>
               <a target="_blank"
-                 href="https://www.passkeys.com/what-are-passkeys">Passkeys</a> are a great and modern way to harden your account's security whilst going passwordless.<br>
-              Please note that Braindump's passkey login is only available after having logged in <i>traditionally</i> (by entering your username and password) at least once, since everything is client-side encrypted using your password.
+                 href="https://www.passkeys.com/what-are-passkeys">Passkeys</a> are a great and modern way to harden
+              your account's security whilst going passwordless.<br>
+              Please note that Braindump's passkey login is only available after having logged in <i>traditionally</i>
+              (by entering your username and password) at least once, since everything is client-side encrypted using
+              your password.
             </p>
 
             <div v-if="braindumpStore.user.PasskeysJson">
@@ -1085,7 +1088,9 @@ async function onClickDeleteAccount(): Promise<void>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
 
                   <span>
-                    {{ passkey.DisplayName }}, last used: {{getDateTimeString(getDateFromUnixTimestamp(passkey.LastUsageTimestampUTC), true)}}
+                    {{
+                      passkey.DisplayName
+                    }}, last used: {{ getDateTimeString(getDateFromUnixTimestamp(passkey.LastUsageTimestampUTC), true) }}
                   </span>
 
                   <div class="passkeys-buttons">
@@ -1132,7 +1137,8 @@ async function onClickDeleteAccount(): Promise<void>
 
           </div>
 
-          <div v-else>
+          <div class="card-body"
+               v-else>
             <p>
               <a target="_blank"
                  href="https://www.passkeys.com/what-are-passkeys">FIDO2 passkeys</a> are only allowed for user accounts
