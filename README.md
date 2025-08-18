@@ -1,4 +1,12 @@
-# braindump
+> [!IMPORTANT]
+>
+> # **NOTICE:**
+>
+> ## Development of this project has been migrated to: https://codeberg.org/GlitchedPolygons/Braindump
+>
+> ## All pull requests and issues on GitHub will be ignored from the 16th of August, 2025 onwards.
+
+# Braindump
 
 This template should help get you started developing with Vue 3 in Vite.
 
